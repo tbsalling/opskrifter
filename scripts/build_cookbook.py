@@ -1410,7 +1410,6 @@ def draw_cover() -> Image.Image:
 
     draw_cover_illustration(panel)
 
-    draw.text((160, A5_H - 190), "Opskrifter sat op til print og hæftning", font=load_font(30, "sans"), fill="#6a5442")
     return panel
 
 
