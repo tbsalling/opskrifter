@@ -137,6 +137,7 @@ NDB: Dict[str, Nutrient] = {
     "parmesan": Nutrient(431, 38, 4, 29),
     "revet_ost_13": Nutrient(250, 30, 1, 13),
     "mozzarella": Nutrient(280, 22, 2, 20),
+    "tommes_de_savoir": Nutrient(280, 22, 2, 20),
     "cheddar": Nutrient(403, 25, 1.3, 33),
     "parmaskinke": Nutrient(269, 28, 0, 18),
     "mornaysauce": Nutrient(160, 6, 8, 11),
@@ -202,6 +203,7 @@ DISPLAY_NAMES = {
     "parmesan": "Parmesan",
     "revet_ost_13": "Revet ost 13 %",
     "mozzarella": "Mozzarella",
+    "tommes_de_savoir": "Tommes de Savoir",
     "cheddar": "Cheddar",
     "parmaskinke": "Parmaskinke",
     "mornaysauce": "Mornaysauce",
@@ -384,7 +386,7 @@ RECIPES: List[Recipe] = [
     ),
     Recipe(
         section="Aftensmad",
-        title="Galetter med skinke, ost og spejlæg",
+        title="Galetter med skinke, ost og æg",
         servings=4,
         finished_weight_g=950,
         ingredients=[
@@ -748,7 +750,7 @@ RECIPES: List[Recipe] = [
             "2 fed hvidløg, valgfrit",
             "50 g smør",
             "2,5 dl varm fløde",
-            "350 g ost, fx tomme fraîche, mozzarella og emmentaler",
+            "350 g Tommes de Savoir",
             "Salt og hvid peber",
         ],
         method=[
@@ -759,7 +761,7 @@ RECIPES: List[Recipe] = [
             "Fortsæt, til aligot kan trækkes i lange tråde.",
             "Smag til med salt og hvid peber, og server straks.",
         ],
-        nutrient_items=[("kartoffel", 1000), ("hvidløg", 6), ("smør", 50), ("fløde_38", 250), ("mozzarella", 350)],
+        nutrient_items=[("kartoffel", 1000), ("hvidløg", 6), ("smør", 50), ("fløde_38", 250), ("tommes_de_savoir", 350)],
     ),
     Recipe(
         section="Weekend",
@@ -830,7 +832,7 @@ COMPONENT_RULES = {
         "ingredients": [("Tzatziki", 0, 6)],
         "method": [("Tzatziki", 0, 4)],
     },
-    "Galetter med skinke, ost og spejlæg": {
+    "Galetter med skinke, ost og æg": {
         "ingredients": [("Galettedej", 0, 5), ("Skinkefyld", 5, 8), ("Til servering", 8, 9)],
         "method": [("Galetter", 0, 3), ("Skinkefyld", 3, 6), ("Servering", 6, 7)],
     },
@@ -1629,6 +1631,11 @@ def compose_spread(left: Image.Image, right: Image.Image) -> Image.Image:
 
 def build_markdown_and_page_map(ordered: List[Recipe]):
     RECIPES_DIR.mkdir(parents=True, exist_ok=True)
+    expected_paths = {RECIPES_DIR / f"{slugify(recipe.title)}.md" for recipe in ordered}
+
+    for existing_path in RECIPES_DIR.glob("*.md"):
+        if existing_path not in expected_paths:
+            existing_path.unlink()
 
     page_map: Dict[str, int] = {}
     nutrition_map: Dict[str, Tuple[dict, float, dict]] = {}

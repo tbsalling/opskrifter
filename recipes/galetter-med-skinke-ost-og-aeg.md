@@ -1,4 +1,4 @@
-# Galetter med skinke, ost og spejlæg
+# Galetter med skinke, ost og æg
 
 - Kategori: Aftensmad
 - Portioner: 4

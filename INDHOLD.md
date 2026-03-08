@@ -15,7 +15,7 @@
 - Boller i karry med grønt (side 9)
 - Cottage pie, klassisk (side 10)
 - Cottage pie, sundere (side 11)
-- Galetter med skinke, ost og spejlæg (side 12)
+- Galetter med skinke, ost og æg (side 12)
 - Hjemmelavet lasagne (side 13)
 - Hvid fisk med spinat og mornaysauce (side 14)
 - Pastarør med østershatte og fløde (side 15)

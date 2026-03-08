@@ -10,7 +10,7 @@
 - 2 fed hvidløg, valgfrit
 - 50 g smør
 - 2,5 dl varm fløde
-- 350 g ost, fx tomme fraîche, mozzarella og emmentaler
+- 350 g Tommes de Savoir
 - Salt og hvid peber
 
 ## Fremgangsmåde
