@@ -4,6 +4,8 @@
 - Portioner: 3
 
 ## Ingredienser
+
+### Fiskefad
 - 450 g hvid fisk, fx torsk, kuller eller sej
 - 200 g frisk spinat eller optøet, afdryppet spinat
 - 2 dl mornaysauce
@@ -12,6 +14,8 @@
 - Evt. 30 g revet ost
 
 ## Fremgangsmåde
+
+### Fiskefad
 1. Forvarm ovnen til 200 °C, og smør et ovnfast fad let.
 2. Krydr fisken med salt, peber og citronsaft.
 3. Fordel spinaten i bunden af fadet, læg fisken ovenpå, og hæld mornaysaucen over.

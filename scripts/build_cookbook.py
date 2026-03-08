@@ -204,6 +204,7 @@ RECIPE_CHIP_SIZE = 23
 RECIPE_BODY_SIZE = 26
 RECIPE_BODY_BOLD_SIZE = 28
 RECIPE_SMALL_SIZE = 22
+COMPONENT_PREFIX = ":: "
 
 
 RECIPES: List[Recipe] = [
@@ -733,6 +734,73 @@ RECIPES: List[Recipe] = [
     ),
 ]
 
+COMPONENT_RULES = {
+    "Brød i stegeso": {
+        "ingredients": [("Dej", 0, 4)],
+        "method": [("Dej", 0, 2), ("Bagning", 2, 7)],
+    },
+    "Kanelsnegle": {
+        "ingredients": [("Dej", 0, 7), ("Fyld", 7, 8), ("Glasur", 8, 9)],
+        "method": [("Dej", 0, 3), ("Fyld og formning", 3, 6), ("Bagning", 6, 7)],
+    },
+    "Surdejsbrød": {
+        "ingredients": [("Dej", 0, 6), ("Klargøring", 6, 7)],
+        "method": [("Dej", 0, 3), ("Foldning og hævning", 3, 6), ("Bagning", 6, 9)],
+    },
+    "Mini hash browns": {
+        "ingredients": [("Kartoffelmasse", 0, 7)],
+        "method": [("Forberedelse", 0, 2), ("Formning og stegning", 2, 5)],
+    },
+    "Tzatziki": {
+        "ingredients": [("Tzatziki", 0, 6)],
+        "method": [("Tzatziki", 0, 4)],
+    },
+    "Bergensk fiskesuppe": {
+        "ingredients": [("Suppebase", 0, 10), ("Legering og finish", 10, 13)],
+        "method": [("Forberedelse", 0, 1), ("Suppebase", 1, 5), ("Legering", 5, 7), ("Servering", 7, 8)],
+    },
+    "Boller i karry med grønt": {
+        "ingredients": [("Boller", 0, 6), ("Sovs", 6, 11), ("Til servering", 11, 12)],
+        "method": [("Boller", 0, 2), ("Sovs", 2, 6), ("Til servering", 6, 7)],
+    },
+    "Cottage pie, klassisk": {
+        "ingredients": [("Fyld", 0, 12), ("Kartoffelmos og top", 12, 14)],
+        "method": [("Kartoffelmos", 0, 2), ("Fyld", 2, 6), ("Samling og bagning", 6, 8)],
+    },
+    "Cottage pie, sundere": {
+        "ingredients": [("Fyld", 0, 10), ("Mos", 10, 12)],
+        "method": [("Mos", 0, 1), ("Fyld", 1, 5), ("Samling og bagning", 5, 6)],
+    },
+    "Hjemmelavet lasagne": {
+        "ingredients": [("Kødsauce", 0, 10), ("Bechamel", 10, 11), ("Samling", 11, 13)],
+        "method": [("Kødsauce", 0, 2), ("Bechamel", 2, 3), ("Samling og bagning", 3, 6)],
+    },
+    "Hvid fisk med spinat og mornaysauce": {
+        "ingredients": [("Fiskefad", 0, 6)],
+        "method": [("Fiskefad", 0, 6)],
+    },
+    "Pastarør med østershatte og fløde": {
+        "ingredients": [("Pasta og sauce", 0, 11)],
+        "method": [("Pasta", 0, 1), ("Sauce", 1, 5), ("Samling", 5, 7)],
+    },
+    "Proteinrig pastaret med oksekød": {
+        "ingredients": [("Pastaret", 0, 12)],
+        "method": [("Pasta og kød", 0, 2), ("Samling og bagning", 2, 5)],
+    },
+    "Aligot": {
+        "ingredients": [("Aligot", 0, 6)],
+        "method": [("Kartoffelmos", 0, 3), ("Ost og finish", 3, 6)],
+    },
+    "Langtidsstegt and": {
+        "ingredients": [("And", 0, 3)],
+        "method": [("Stegning", 0, 5)],
+    },
+    "Pulled pork": {
+        "ingredients": [("Kød og krydderier", 0, 10), ("Servering", 10, 11)],
+        "method": [("Klargøring", 0, 2), ("Langtidstilberedning", 2, 4), ("Afslutning", 4, 5)],
+    },
+}
+
 
 def calc_nutrition(items: List[Tuple[str, float]], servings: int, finished_weight_g: float):
     totals = {"kcal": 0.0, "protein": 0.0, "carbs": 0.0, "fat": 0.0}
@@ -756,6 +824,32 @@ def calc_nutrition(items: List[Tuple[str, float]], servings: int, finished_weigh
     return per_100, kcal_per_portion, macro_pct
 
 
+def is_component_entry(text: str) -> bool:
+    return text.startswith(COMPONENT_PREFIX)
+
+
+def component_name(text: str) -> str:
+    return text[len(COMPONENT_PREFIX):]
+
+
+def componentize_entries(entries: List[str], specs: List[Tuple[str, int, int]]) -> List[str]:
+    output: List[str] = []
+    for label, start, end in specs:
+        output.append(f"{COMPONENT_PREFIX}{label}")
+        output.extend(entries[start:end])
+    return output
+
+
+def recipe_component_entries(recipe: Recipe) -> Tuple[List[str], List[str]]:
+    rules = COMPONENT_RULES.get(recipe.title)
+    if not rules:
+        return recipe.ingredients, recipe.method
+    return (
+        componentize_entries(recipe.ingredients, rules["ingredients"]),
+        componentize_entries(recipe.method, rules["method"]),
+    )
+
+
 def ordered_recipes() -> List[Recipe]:
     order = ["Bagværk", "Tilbehør", "Aftensmad", "Weekend"]
     grouped = {name: [] for name in order}
@@ -769,6 +863,7 @@ def ordered_recipes() -> List[Recipe]:
 
 
 def render_markdown(recipe: Recipe, per_100: dict, kcal_per_portion: float, macro_pct: dict) -> str:
+    ingredient_entries, method_entries = recipe_component_entries(recipe)
     lines = [
         f"# {recipe.title}",
         "",
@@ -777,9 +872,20 @@ def render_markdown(recipe: Recipe, per_100: dict, kcal_per_portion: float, macr
         "",
         "## Ingredienser",
     ]
-    lines.extend([f"- {item}" for item in recipe.ingredients])
+    for item in ingredient_entries:
+        if is_component_entry(item):
+            lines.extend(["", f"### {component_name(item)}"])
+        else:
+            lines.append(f"- {item}")
     lines.extend(["", "## Fremgangsmåde"])
-    lines.extend([f"{index}. {step}" for index, step in enumerate(recipe.method, start=1)])
+    step_number = 1
+    for step in method_entries:
+        if is_component_entry(step):
+            step_number = 1
+            lines.extend(["", f"### {component_name(step)}"])
+        else:
+            lines.append(f"{step_number}. {step}")
+            step_number += 1
     lines.extend(
         [
             "",
@@ -906,21 +1012,36 @@ def tag_size(draw: ImageDraw.ImageDraw, text: str, font) -> Tuple[int, int]:
 
 
 def measure_recipe_columns(
-    recipe: Recipe,
+    ingredient_entries: List[str],
+    method_entries: List[str],
     draw: ImageDraw.ImageDraw,
     ingredient_width: int,
     method_width: int,
     body_font,
+    body_bold,
     body_line: int,
 ) -> Tuple[int, int]:
     left_height = 0
-    for ingredient in recipe.ingredients:
-        left_height += len(wrap_text(draw, f"• {ingredient}", body_font, ingredient_width)) * body_line
+    for ingredient in ingredient_entries:
+        if is_component_entry(ingredient):
+            left_height += body_line
+            left_height += len(wrap_text(draw, component_name(ingredient), body_bold, ingredient_width)) * body_line
+            left_height += int(body_line * 0.2)
+        else:
+            left_height += len(wrap_text(draw, f"• {ingredient}", body_font, ingredient_width)) * body_line
 
     right_height = 0
-    for index, step in enumerate(recipe.method, start=1):
-        right_height += len(wrap_text(draw, f"{index}. {step}", body_font, method_width)) * body_line
-        right_height += int(body_line * 0.15)
+    step_number = 1
+    for step in method_entries:
+        if is_component_entry(step):
+            step_number = 1
+            right_height += body_line
+            right_height += len(wrap_text(draw, component_name(step), body_bold, method_width)) * body_line
+            right_height += int(body_line * 0.2)
+        else:
+            right_height += len(wrap_text(draw, f"{step_number}. {step}", body_font, method_width)) * body_line
+            right_height += int(body_line * 0.15)
+            step_number += 1
 
     return left_height, right_height
 
@@ -1057,6 +1178,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     panel = Image.new("RGB", (A5_W, A5_H), "#fcfaf7")
     draw = ImageDraw.Draw(panel)
     fonts = recipe_fonts()
+    ingredient_entries, method_entries = recipe_component_entries(recipe)
 
     draw.rounded_rectangle(
         [28, 28, A5_W - 28, A5_H - 28],
@@ -1117,11 +1239,13 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     body_bottom = footer_top - 44
 
     left_content_h, right_content_h = measure_recipe_columns(
-        recipe,
+        ingredient_entries,
+        method_entries,
         draw,
         ingredients_w - 56,
         method_w - 56,
         body_font,
+        body_bold,
         body_line,
     )
     available_h = body_bottom - (body_y + 96) - 24
@@ -1161,31 +1285,62 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     )
 
     cursor_left = body_y + 96
-    for ingredient in recipe.ingredients:
-        cursor_left = draw_text_block(
-            draw,
-            ingredients_x + 28,
-            cursor_left,
-            ingredients_w - 56,
-            f"• {ingredient}",
-            body_font,
-            "#2d2a26",
-            body_line,
-        )
+    for ingredient in ingredient_entries:
+        if is_component_entry(ingredient):
+            cursor_left += int(body_line * 0.35)
+            cursor_left = draw_text_block(
+                draw,
+                ingredients_x + 28,
+                cursor_left,
+                ingredients_w - 56,
+                component_name(ingredient),
+                body_bold,
+                style.accent,
+                body_line,
+            )
+            cursor_left += int(body_line * 0.1)
+        else:
+            cursor_left = draw_text_block(
+                draw,
+                ingredients_x + 28,
+                cursor_left,
+                ingredients_w - 56,
+                f"• {ingredient}",
+                body_font,
+                "#2d2a26",
+                body_line,
+            )
 
     cursor_right = body_y + 96
-    for index, step in enumerate(recipe.method, start=1):
-        cursor_right = draw_text_block(
-            draw,
-            method_x + 28,
-            cursor_right,
-            method_w - 56,
-            f"{index}. {step}",
-            body_font,
-            "#2d2a26",
-            body_line,
-        )
-        cursor_right += int(body_line * 0.15)
+    step_number = 1
+    for step in method_entries:
+        if is_component_entry(step):
+            step_number = 1
+            cursor_right += int(body_line * 0.35)
+            cursor_right = draw_text_block(
+                draw,
+                method_x + 28,
+                cursor_right,
+                method_w - 56,
+                component_name(step),
+                body_bold,
+                style.accent,
+                body_line,
+            )
+            cursor_right += int(body_line * 0.1)
+        else:
+            cursor_right = draw_text_block(
+                draw,
+                method_x + 28,
+                cursor_right,
+                method_w - 56,
+                f"{step_number}. {step}",
+                body_font,
+                "#2d2a26",
+                body_line,
+            )
+            cursor_right += int(body_line * 0.15)
+            step_number += 1
 
     draw.rounded_rectangle(
         [INNER_MARGIN, footer_top, A5_W - INNER_MARGIN, A5_H - 110],

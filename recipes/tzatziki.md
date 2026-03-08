@@ -4,6 +4,8 @@
 - Portioner: 4
 
 ## Ingredienser
+
+### Tzatziki
 - 250 g græsk yoghurt 10 %
 - 200 g agurk, groftrevet og afdryppet
 - 1-2 fed hvidløg, fintrevet
@@ -12,6 +14,8 @@
 - Salt, evt. lidt hakket dild eller mynte
 
 ## Fremgangsmåde
+
+### Tzatziki
 1. Riv agurken groft, og pres så meget væde ud som muligt.
 2. Rør yoghurt sammen med agurk, hvidløg, olie og citronsaft.
 3. Smag til med salt og eventuelt dild eller mynte.

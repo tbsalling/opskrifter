@@ -4,11 +4,15 @@
 - Portioner: 6
 
 ## Ingredienser
+
+### And
 - 1 and på ca. 3,5 kg
 - Salt og peber
 - Evt. æbler og svesker til fyld
 
 ## Fremgangsmåde
+
+### Stegning
 1. Dup anden tør, og krydr den godt både indvendigt og udvendigt med salt og peber.
 2. Steg anden ved 150 °C i cirka 3-3,5 timer, svarende til omtrent 50-60 minutter pr. kilo.
 3. Mål kernetemperaturen i låret; den bør være omkring 75 °C.

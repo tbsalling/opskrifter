@@ -25,6 +25,7 @@ Byg en trykegnet dansk kogebog i PDF ud fra opskrifter skrevet i Markdown.
 - Kort, præcis ingrediensliste med metriske enheder
 - Detaljeret, praktisk fremgangsmåde
 - Ens struktur på tværs af alle opskrifter
+- Opdel både ingrediensliste og fremgangsmåde i logiske komponenter, hvor det giver mening, fx "Boller" og "Sovs", "Kødsauce" og "Bechamel" eller "Dej" og "Fyld"
 
 ## Ernæring pr. opskrift
 Vis altid:
