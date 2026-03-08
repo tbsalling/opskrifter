@@ -16,10 +16,9 @@ PDF_PATH = OUTPUT_DIR / "kogebog.pdf"
 DATA_DIR = ROOT / "data"
 VERSION_FILE = DATA_DIR / "book_version.txt"
 
-A4_W, A4_H = 3508, 2480
-A5_W, A5_H = A4_W // 2, A4_H
-OUTER_MARGIN = 70
-INNER_MARGIN = 96
+A4_W, A4_H = 2480, 3508
+OUTER_MARGIN = 90
+INNER_MARGIN = 120
 TITLE = "Vores opskrifter"
 SUBTITLE = "Mad fra Solsidens køkken"
 
@@ -240,12 +239,12 @@ SECTION_STYLES = {
     "Weekend": SectionStyle("#1d2530", "#edf1f6", "#7288a4", "#d5ddea"),
 }
 
-RECIPE_SECTION_SIZE = 26
-RECIPE_TITLE_SIZE = 56
-RECIPE_CHIP_SIZE = 23
-RECIPE_BODY_SIZE = 27
-RECIPE_BODY_BOLD_SIZE = 29
-RECIPE_SMALL_SIZE = 22
+RECIPE_SECTION_SIZE = 32
+RECIPE_TITLE_SIZE = 70
+RECIPE_CHIP_SIZE = 28
+RECIPE_BODY_SIZE = 34
+RECIPE_BODY_BOLD_SIZE = 36
+RECIPE_SMALL_SIZE = 27
 COMPONENT_PREFIX = ":: "
 
 
@@ -1055,10 +1054,10 @@ def line_height(font_size: int, multiplier: float = 1.28) -> int:
 
 
 def draw_pattern(draw: ImageDraw.ImageDraw, style: SectionStyle) -> None:
-    draw.ellipse([A5_W - 520, -120, A5_W - 40, 360], outline=style.soft, width=4)
-    draw.ellipse([A5_W - 440, -40, A5_W + 80, 480], outline=style.soft, width=2)
-    draw.ellipse([60, A5_H - 400, 420, A5_H - 40], outline=style.soft, width=3)
-    draw.line([OUTER_MARGIN, 160, A5_W - OUTER_MARGIN, 160], fill=style.soft, width=3)
+    draw.ellipse([A4_W - 520, -120, A4_W - 40, 360], outline=style.soft, width=4)
+    draw.ellipse([A4_W - 440, -40, A4_W + 80, 480], outline=style.soft, width=2)
+    draw.ellipse([60, A4_H - 400, 420, A4_H - 40], outline=style.soft, width=3)
+    draw.line([OUTER_MARGIN, 160, A4_W - OUTER_MARGIN, 160], fill=style.soft, width=3)
 
 
 def section_label(section: str) -> str:
@@ -1177,7 +1176,7 @@ def draw_cover_illustration(base: Image.Image) -> None:
     overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
-    art_box = [130, 760, A5_W - 130, A5_H - 250]
+    art_box = [130, 1000, A4_W - 130, A4_H - 250]
     blurred_roundrect(overlay, [art_box[0] + 12, art_box[1] + 18, art_box[2] + 12, art_box[3] + 18], 48, (60, 36, 22, 45), 22)
     draw.rounded_rectangle(art_box, radius=48, fill="#efe1d0", outline="#dac4ae", width=3)
 
@@ -1256,13 +1255,13 @@ def draw_cover_illustration(base: Image.Image) -> None:
 
 def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, macro_pct: dict, page_number: int) -> Image.Image:
     style = SECTION_STYLES[recipe.section]
-    panel = Image.new("RGB", (A5_W, A5_H), "#fcfaf7")
+    panel = Image.new("RGB", (A4_W, A4_H), "#fcfaf7")
     draw = ImageDraw.Draw(panel)
     fonts = recipe_fonts()
     ingredient_entries, method_entries = recipe_component_entries(recipe)
 
     draw.rounded_rectangle(
-        [28, 28, A5_W - 28, A5_H - 28],
+        [28, 28, A4_W - 28, A4_H - 28],
         radius=34,
         outline=style.soft,
         width=3,
@@ -1279,7 +1278,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
 
     header_top = OUTER_MARGIN + 18
     tag_y = header_top + 26
-    title_box_width = A5_W - 2 * INNER_MARGIN - 48
+    title_box_width = A4_W - 2 * INNER_MARGIN - 48
     title_lines = wrap_text(draw, recipe.title, title_font, title_box_width)
     tag_height = tag_size(draw, section_label(recipe.section), section_font)[1]
     chip_height = tag_size(draw, f"{recipe.servings} portioner", chip_font)[1]
@@ -1290,7 +1289,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     header_bottom = chip_y + chip_height + 34
 
     draw.rounded_rectangle(
-        [OUTER_MARGIN, header_top, A5_W - OUTER_MARGIN, header_bottom],
+        [OUTER_MARGIN, header_top, A4_W - OUTER_MARGIN, header_bottom],
         radius=40,
         fill=style.panel,
         outline=style.soft,
@@ -1307,15 +1306,15 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     draw_tag(draw, (left_x, chip_y), f"{recipe.servings} portioner", chip_font, style.soft, style.ink)
     draw_tag(draw, (left_x + 240, chip_y), f"{round(kcal_per_portion)} kcal/portion", chip_font, style.soft, style.ink)
 
-    column_gap = 40
+    column_gap = 60
     content_x = INNER_MARGIN
-    content_w = A5_W - 2 * INNER_MARGIN
+    content_w = A4_W - 2 * INNER_MARGIN
     ingredients_w = int(content_w * 0.38)
     method_w = content_w - ingredients_w - column_gap
     ingredients_x = content_x
     method_x = ingredients_x + ingredients_w + column_gap
     body_y = header_bottom + 40
-    footer_top = A5_H - 360
+    footer_top = A4_H - 480
     body_bottom = footer_top - 44
 
     left_content_h, right_content_h = measure_recipe_columns(
@@ -1328,7 +1327,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         body_bold,
         body_line,
     )
-    available_h = body_bottom - (body_y + 96) - 24
+    available_h = body_bottom - (body_y + 120) - 24
     required_h = max(left_content_h, right_content_h)
     if required_h > available_h:
         raise RuntimeError(
@@ -1351,20 +1350,20 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         width=2,
     )
 
-    draw.text((ingredients_x + 28, body_y + 26), "Ingredienser", font=body_bold, fill=style.ink)
-    draw.text((method_x + 28, body_y + 26), "Fremgangsmåde", font=body_bold, fill=style.ink)
+    draw.text((ingredients_x + 28, body_y + 33), "Ingredienser", font=body_bold, fill=style.ink)
+    draw.text((method_x + 28, body_y + 33), "Fremgangsmåde", font=body_bold, fill=style.ink)
     draw.line(
-        [ingredients_x + 28, body_y + 76, ingredients_x + ingredients_w - 28, body_y + 76],
+        [ingredients_x + 28, body_y + 96, ingredients_x + ingredients_w - 28, body_y + 96],
         fill=style.soft,
         width=2,
     )
     draw.line(
-        [method_x + 28, body_y + 76, method_x + method_w - 28, body_y + 76],
+        [method_x + 28, body_y + 96, method_x + method_w - 28, body_y + 96],
         fill=style.soft,
         width=2,
     )
 
-    cursor_left = body_y + 96
+    cursor_left = body_y + 120
     for ingredient in ingredient_entries:
         if is_component_entry(ingredient):
             cursor_left += int(body_line * 0.35)
@@ -1391,7 +1390,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
                 body_line,
             )
 
-    cursor_right = body_y + 96
+    cursor_right = body_y + 120
     step_number = 1
     for step in method_entries:
         if is_component_entry(step):
@@ -1423,14 +1422,14 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
             step_number += 1
 
     draw.rounded_rectangle(
-        [INNER_MARGIN, footer_top, A5_W - INNER_MARGIN, A5_H - 110],
+        [INNER_MARGIN, footer_top, A4_W - INNER_MARGIN, A4_H - 110],
         radius=28,
         fill=style.ink,
     )
     draw.text((INNER_MARGIN + 32, footer_top + 26), "Næringsestimat", font=body_bold, fill="#fffdf9")
     nutrition_x = INNER_MARGIN + 32
     nutrition_y = footer_top + 76
-    nutrition_width = A5_W - 2 * INNER_MARGIN - 64
+    nutrition_width = A4_W - 2 * INNER_MARGIN - 64
     nutrition_lines = [
         f"Energi pr. 100 g: {round(per_100['kcal'])} kcal",
         f"Energi pr. portion: {round(kcal_per_portion)} kcal",
@@ -1457,37 +1456,37 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
             body_line,
         )
 
-    page_font = load_font(24, "sans")
+    page_font = load_font(30, "sans")
     page_text = f"side {page_number}"
     bbox = draw.textbbox((0, 0), page_text, font=page_font)
-    draw.text((A5_W - INNER_MARGIN - (bbox[2] - bbox[0]), A5_H - 84), page_text, font=page_font, fill="#857a6c")
+    draw.text((A4_W - INNER_MARGIN - (bbox[2] - bbox[0]), A4_H - 84), page_text, font=page_font, fill="#857a6c")
     return panel
 
 
 def draw_cover(version: int, build_date_text: str) -> Image.Image:
-    panel = vertical_gradient(A5_W, A5_H, "#f7f0e5", "#eadbc8")
+    panel = vertical_gradient(A4_W, A4_H, "#f7f0e5", "#eadbc8")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#d7c2ad", width=3, fill="#fbf7f1")
-    draw.rounded_rectangle([84, 84, A5_W - 84, A5_H - 84], radius=42, outline="#cdb094", width=2)
-    draw.ellipse([A5_W - 620, 120, A5_W - 110, 630], outline="#e3d0be", width=4)
-    draw.ellipse([A5_W - 540, 190, A5_W - 20, 710], outline="#efe4d8", width=2)
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#d7c2ad", width=3, fill="#fbf7f1")
+    draw.rounded_rectangle([84, 84, A4_W - 84, A4_H - 84], radius=42, outline="#cdb094", width=2)
+    draw.ellipse([A4_W - 620, 120, A4_W - 110, 630], outline="#e3d0be", width=4)
+    draw.ellipse([A4_W - 540, 190, A4_W - 20, 710], outline="#efe4d8", width=2)
 
-    title_font = load_font(102, "display")
-    subtitle_font = load_font(42, "sans")
-    strap_font = load_font(28, "sans")
-    meta_font = load_font(24, "sans-bold")
+    title_font = load_font(128, "display")
+    subtitle_font = load_font(52, "sans")
+    strap_font = load_font(36, "sans")
+    meta_font = load_font(30, "sans-bold")
 
-    title_y = 260
-    for line in wrap_text(draw, TITLE, title_font, A5_W - 2 * 160):
+    title_y = 320
+    for line in wrap_text(draw, TITLE, title_font, A4_W - 2 * 160):
         draw.text((160, title_y), line, font=title_font, fill="#2f251d")
         title_y += line_height(title_font.size, 1.02)
 
     draw.text((160, title_y + 12), SUBTITLE, font=subtitle_font, fill="#6c5543")
-    draw.text((160, title_y + 74), "Et hæfte med familiens retter og bagværk", font=strap_font, fill="#8b725f")
-    draw.rounded_rectangle([160, title_y + 128, 560, title_y + 178], radius=18, fill="#ead9c7")
-    draw.rounded_rectangle([580, title_y + 128, 980, title_y + 178], radius=18, fill="#ead9c7")
-    draw.text((184, title_y + 141), f"Version {version}", font=meta_font, fill="#5e4939")
-    draw.text((604, title_y + 141), build_date_text, font=meta_font, fill="#5e4939")
+    draw.text((160, title_y + 80), "Et hæfte med familiens retter og bagværk", font=strap_font, fill="#8b725f")
+    draw.rounded_rectangle([160, title_y + 150, 720, title_y + 210], radius=18, fill="#ead9c7")
+    draw.rounded_rectangle([760, title_y + 150, 1320, title_y + 210], radius=18, fill="#ead9c7")
+    draw.text((184, title_y + 163), f"Version {version}", font=meta_font, fill="#5e4939")
+    draw.text((784, title_y + 163), build_date_text, font=meta_font, fill="#5e4939")
 
     draw_cover_illustration(panel)
 
@@ -1495,65 +1494,65 @@ def draw_cover(version: int, build_date_text: str) -> Image.Image:
 
 
 def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Image:
-    panel = Image.new("RGB", (A5_W, A5_H), "#fcfaf7")
+    panel = Image.new("RGB", (A4_W, A4_H), "#fcfaf7")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#ddd3c8", width=3, fill="#fffdf9")
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#ddd3c8", width=3, fill="#fffdf9")
 
-    title_font = load_font(78, "display")
-    section_font = load_font(30, "sans-bold")
-    body_font = load_font(29, "sans")
-    small_font = load_font(24, "sans")
+    title_font = load_font(96, "display")
+    section_font = load_font(38, "sans-bold")
+    body_font = load_font(36, "sans")
+    small_font = load_font(30, "sans")
 
     draw.text((INNER_MARGIN, 140), "Indhold", font=title_font, fill="#2b241f")
-    draw.text((INNER_MARGIN, 240), "Opskrifter", font=small_font, fill="#756a5f")
+    draw.text((INNER_MARGIN, 260), "Opskrifter", font=small_font, fill="#756a5f")
 
-    y = 340
+    y = 380
     current_section = None
     for recipe in ordered:
         if recipe.section != current_section:
             current_section = recipe.section
             style = SECTION_STYLES[current_section]
-            draw.rounded_rectangle([INNER_MARGIN, y, A5_W - INNER_MARGIN, y + 52], radius=18, fill=style.panel)
-            draw.text((INNER_MARGIN + 18, y + 10), current_section, font=section_font, fill=style.ink)
-            y += 76
+            draw.rounded_rectangle([INNER_MARGIN, y, A4_W - INNER_MARGIN, y + 64], radius=18, fill=style.panel)
+            draw.text((INNER_MARGIN + 18, y + 12), current_section, font=section_font, fill=style.ink)
+            y += 92
 
         draw.text((INNER_MARGIN + 10, y), recipe.title, font=body_font, fill="#2d2a26")
         number_text = str(page_map[recipe.title])
         bbox = draw.textbbox((0, 0), number_text, font=body_font)
-        number_x = A5_W - INNER_MARGIN - (bbox[2] - bbox[0])
+        number_x = A4_W - INNER_MARGIN - (bbox[2] - bbox[0])
         draw.text((number_x, y), number_text, font=body_font, fill="#7f7266")
-        draw.line([INNER_MARGIN + 10, y + 40, A5_W - INNER_MARGIN, y + 40], fill="#ece4da", width=1)
-        y += 52
+        draw.line([INNER_MARGIN + 10, y + 50, A4_W - INNER_MARGIN, y + 50], fill="#ece4da", width=1)
+        y += 64
 
-    draw.text((A5_W - 170, A5_H - 84), "side 2", font=small_font, fill="#857a6c")
+    draw.text((A4_W - 200, A4_H - 84), "side 2", font=small_font, fill="#857a6c")
     return panel
 
 
 def draw_raw_table_page(keys: List[str], page_number: int, start_index: int) -> Tuple[Image.Image, int]:
-    panel = Image.new("RGB", (A5_W, A5_H), "#fbfaf8")
+    panel = Image.new("RGB", (A4_W, A4_H), "#fbfaf8")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#d6dbe0", width=3, fill="#fffdf9")
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#d6dbe0", width=3, fill="#fffdf9")
 
-    title_font = load_font(68, "display")
-    header_font = load_font(28, "sans-bold")
-    row_font = load_font(28, "sans")
-    small_font = load_font(24, "sans")
+    title_font = load_font(84, "display")
+    header_font = load_font(34, "sans-bold")
+    row_font = load_font(34, "sans")
+    small_font = load_font(30, "sans")
 
     draw.text((INNER_MARGIN, 130), "Råvarer og energi", font=title_font, fill="#24313c")
-    draw.text((INNER_MARGIN, 215), "Energiindhold pr. 100 g for de råvarer, der indgår i hæftet.", font=small_font, fill="#66727d")
+    draw.text((INNER_MARGIN, 230), "Energiindhold pr. 100 g for de råvarer, der indgår i hæftet.", font=small_font, fill="#66727d")
 
     col1_x = INNER_MARGIN
-    col2_x = 980
-    top = 320
+    col2_x = 1300
+    top = 360
     draw.text((col1_x, top), "Råvare", font=header_font, fill="#24313c")
-    draw.text((col1_x + 520, top), "kcal", font=header_font, fill="#24313c")
+    draw.text((col1_x + 700, top), "kcal", font=header_font, fill="#24313c")
     draw.text((col2_x, top), "Råvare", font=header_font, fill="#24313c")
-    draw.text((col2_x + 520, top), "kcal", font=header_font, fill="#24313c")
-    top += 50
-    draw.line([col1_x, top, A5_W - INNER_MARGIN, top], fill="#cfd6dc", width=2)
-    top += 24
+    draw.text((col2_x + 700, top), "kcal", font=header_font, fill="#24313c")
+    top += 60
+    draw.line([col1_x, top, A4_W - INNER_MARGIN, top], fill="#cfd6dc", width=2)
+    top += 28
 
-    row_h = 44
+    row_h = 54
     left_y = top
     right_y = top
     index = start_index
@@ -1561,7 +1560,7 @@ def draw_raw_table_page(keys: List[str], page_number: int, start_index: int) -> 
     while index < len(keys):
         target_x = col1_x if left_y <= right_y else col2_x
         target_y = left_y if left_y <= right_y else right_y
-        if target_y + row_h > A5_H - 150:
+        if target_y + row_h > A4_H - 150:
             if target_x == col1_x and right_y <= left_y:
                 target_x = col2_x
                 target_y = right_y
@@ -1570,37 +1569,37 @@ def draw_raw_table_page(keys: List[str], page_number: int, start_index: int) -> 
 
         key = keys[index]
         draw.text((target_x, target_y), DISPLAY_NAMES.get(key, key), font=row_font, fill="#2d2a26")
-        draw.text((target_x + 520, target_y), str(round(NDB[key].kcal)), font=row_font, fill="#2d2a26")
+        draw.text((target_x + 700, target_y), str(round(NDB[key].kcal)), font=row_font, fill="#2d2a26")
         if target_x == col1_x:
             left_y += row_h
         else:
             right_y += row_h
         index += 1
 
-    draw.text((A5_W - 170, A5_H - 84), f"side {page_number}", font=small_font, fill="#857a6c")
+    draw.text((A4_W - 200, A4_H - 84), f"side {page_number}", font=small_font, fill="#857a6c")
     return panel, index
 
 
 def draw_back_cover() -> Image.Image:
-    panel = Image.new("RGB", (A5_W, A5_H), "#f2f5f8")
+    panel = Image.new("RGB", (A4_W, A4_H), "#f2f5f8")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#cfd7df", width=3, fill="#f7fafc")
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#cfd7df", width=3, fill="#f7fafc")
 
-    title_font = load_font(72, "display")
-    body_font = load_font(32, "sans")
-    small_font = load_font(24, "sans")
+    title_font = load_font(90, "display")
+    body_font = load_font(40, "sans")
+    small_font = load_font(30, "sans")
 
-    draw.text((INNER_MARGIN, 260), "Kogebogen er sat op", font=title_font, fill="#223241")
-    draw.text((INNER_MARGIN, 360), "til print, hæftning og køkkenbrug.", font=title_font, fill="#223241")
+    draw.text((INNER_MARGIN, 320), "Kogebogen er sat op", font=title_font, fill="#223241")
+    draw.text((INNER_MARGIN, 430), "til print, hæftning og køkkenbrug.", font=title_font, fill="#223241")
 
-    draw.rounded_rectangle([INNER_MARGIN, 620, A5_W - INNER_MARGIN, 980], radius=26, fill="#e8eef4")
-    draw.text((INNER_MARGIN + 36, 670), "Format", font=body_font, fill="#223241")
-    draw.text((INNER_MARGIN + 36, 725), "A4 tværformat med 2 A5-sider pr. ark", font=body_font, fill="#4f6376")
-    draw.text((INNER_MARGIN + 36, 815), "Udtryk", font=body_font, fill="#223241")
-    draw.text((INNER_MARGIN + 36, 870), "Renskrevet, standardiseret og ernæringsberegnet", font=body_font, fill="#4f6376")
+    draw.rounded_rectangle([INNER_MARGIN, 750, A4_W - INNER_MARGIN, 1200], radius=26, fill="#e8eef4")
+    draw.text((INNER_MARGIN + 36, 810), "Format", font=body_font, fill="#223241")
+    draw.text((INNER_MARGIN + 36, 870), "A4 portræt med 1 opskrift pr. side", font=body_font, fill="#4f6376")
+    draw.text((INNER_MARGIN + 36, 990), "Udtryk", font=body_font, fill="#223241")
+    draw.text((INNER_MARGIN + 36, 1050), "Renskrevet, standardiseret og ernæringsberegnet", font=body_font, fill="#4f6376")
 
     draw.text(
-        (INNER_MARGIN, A5_H - 150),
+        (INNER_MARGIN, A4_H - 150),
         "Dannet med hjælp fra AI: OpenAI GPT-5, Codex-agent.",
         font=small_font,
         fill="#6c7a88",
@@ -1609,19 +1608,10 @@ def draw_back_cover() -> Image.Image:
 
 
 def blank_page() -> Image.Image:
-    panel = Image.new("RGB", (A5_W, A5_H), "#fffdf9")
+    panel = Image.new("RGB", (A4_W, A4_H), "#fffdf9")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#ece5dc", width=2, fill="#fffdf9")
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#ece5dc", width=2, fill="#fffdf9")
     return panel
-
-
-def compose_spread(left: Image.Image, right: Image.Image) -> Image.Image:
-    spread = Image.new("RGB", (A4_W, A4_H), "#f4efe9")
-    spread.paste(left, (0, 0))
-    spread.paste(right, (A5_W, 0))
-    draw = ImageDraw.Draw(spread)
-    draw.rectangle([A5_W - 2, 0, A5_W + 2, A4_H], fill="#e8dfd5")
-    return spread
 
 
 def build_markdown_and_page_map(ordered: List[Recipe]):
@@ -1674,11 +1664,11 @@ def build() -> None:
     page_map, nutrition_map, raw_keys = build_markdown_and_page_map(ordered)
     write_contents_file(ordered, page_map)
 
-    a5_pages: List[Image.Image] = [draw_cover(build_version, build_date_text), draw_contents(ordered, page_map)]
+    pages: List[Image.Image] = [draw_cover(build_version, build_date_text), draw_contents(ordered, page_map)]
 
     for recipe in ordered:
         per_100, kcal_per_portion, macro_pct = nutrition_map[recipe.title]
-        a5_pages.append(
+        pages.append(
             draw_recipe_page(
                 recipe,
                 per_100,
@@ -1692,24 +1682,19 @@ def build() -> None:
     raw_index = 0
     while raw_index < len(raw_keys):
         table_page, raw_index = draw_raw_table_page(raw_keys, next_page_number, raw_index)
-        a5_pages.append(table_page)
+        pages.append(table_page)
         next_page_number += 1
 
-    a5_pages.append(draw_back_cover())
+    pages.append(draw_back_cover())
 
-    while len(a5_pages) % 4 != 0:
-        a5_pages.append(blank_page())
+    while len(pages) % 4 != 0:
+        pages.append(blank_page())
 
-    spreads = []
-    for index in range(0, len(a5_pages), 2):
-        spreads.append(compose_spread(a5_pages[index], a5_pages[index + 1]))
-
-    spreads[0].save(PDF_PATH, save_all=True, append_images=spreads[1:], resolution=300.0)
+    pages[0].save(PDF_PATH, save_all=True, append_images=pages[1:], resolution=300.0)
     write_book_version(build_version)
 
     print(f"Skrev {len(ordered)} opskrifter i {RECIPES_DIR}")
-    print(f"A5-sider: {len(a5_pages)}")
-    print(f"A4-sider i PDF: {len(spreads)}")
+    print(f"A4-sider: {len(pages)}")
     print(f"Forside: version {build_version}, dato {build_date_text}")
     print(f"PDF: {PDF_PATH}")
 
