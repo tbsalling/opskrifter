@@ -5,12 +5,8 @@
 
 ## Ingredienser
 
-### Fodring af surdej
-- 100 g hvedemel
-- 100 g vand
-
 ### Dej
-- 200 g aktiv surdej (se klargøring nedenfor)
+- 200 g aktiv surdej
 - 150 g grahamsmel
 - 450 g hvedemel
 - 1 g gær
@@ -21,12 +17,6 @@
 - Solsikkeolie til fad
 
 ## Fremgangsmåde
-
-### Klargøring af surdej
-1. Tag surdejen ud af køleskabet. Surdejen består af hvedemel og vand i vægtforholdet 1:1.
-2. Fodre surdejen med 100 g hvedemel og 100 g vand, og rør grundigt. Den samlede mængde surdej er nu den oprindelige mængde plus 200 g.
-3. Lad surdejen stå ved stuetemperatur i 2-3 timer, til den er aktiv og boblende.
-4. Vej 200 g aktiv surdej af til dejen. Gem resten (mindst 50-100 g) i køleskabet med låg til næste bagning.
 
 ### Dej
 1. Bland surdej, gær, mel og vand i røremaskinens skål. Kør dejen 8 minutter ved høj hastighed.
