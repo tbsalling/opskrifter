@@ -321,8 +321,8 @@ RECIPES: List[Recipe] = [
         finished_weight_g=1150,
         ingredients=[
             "200 g aktiv surdej",
-            "150 g grahamsmel",
-            "450 g hvedemel",
+            "200 g grahamsmel",
+            "400 g hvedemel",
             "1 g gær",
             "15 g fint salt",
             "450 g vand",
@@ -339,7 +339,7 @@ RECIPES: List[Recipe] = [
             "Bag boller i cirka 18 minutter. Bag et stort brød i cirka 38 minutter, tildækket med sølvpapir indtil de sidste 10 minutter.",
             "Lad brødet køle helt af på rist før udskæring.",
         ],
-        nutrient_items=[("surdej", 200), ("grahamsmel", 150), ("hvedemel", 450), ("gær", 1)],
+        nutrient_items=[("surdej", 200), ("grahamsmel", 200), ("hvedemel", 400), ("gær", 1)],
     ),
     Recipe(
         section="Bagværk",

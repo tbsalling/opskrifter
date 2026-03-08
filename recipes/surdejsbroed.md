@@ -7,8 +7,8 @@
 
 ### Dej
 - 200 g aktiv surdej
-- 150 g grahamsmel
-- 450 g hvedemel
+- 200 g grahamsmel
+- 400 g hvedemel
 - 1 g gær
 - 15 g fint salt
 - 450 g vand
@@ -34,7 +34,7 @@
 3. Lad brødet køle helt af på rist før udskæring.
 
 ## Næringsestimat
-- Energi pr. 100 g: 219 kcal
-- Energi pr. portion: 2513 kcal
-- Næringsstoffer pr. 100 g: Protein 6.5 g, Kulhydrat 45.1 g, Fedt 0.8 g
-- Fordeling af energi: Protein 12 %, Kulhydrat 84 %, Fedt 3 %
+- Energi pr. 100 g: 217 kcal
+- Energi pr. portion: 2501 kcal
+- Næringsstoffer pr. 100 g: Protein 6.6 g, Kulhydrat 44.7 g, Fedt 0.9 g
+- Fordeling af energi: Protein 12 %, Kulhydrat 84 %, Fedt 4 %
