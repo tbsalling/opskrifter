@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Dict, List, Tuple
 
@@ -12,13 +13,30 @@ ROOT = Path(__file__).resolve().parents[1]
 RECIPES_DIR = ROOT / "recipes"
 OUTPUT_DIR = ROOT / "output"
 PDF_PATH = OUTPUT_DIR / "kogebog.pdf"
+DATA_DIR = ROOT / "data"
+VERSION_FILE = DATA_DIR / "book_version.txt"
 
 A4_W, A4_H = 3508, 2480
 A5_W, A5_H = A4_W // 2, A4_H
 OUTER_MARGIN = 70
 INNER_MARGIN = 96
-TITLE = "Henriettes opskrifter"
-SUBTITLE = "Mad fra mors køkken"
+TITLE = "Vores opskrifter"
+SUBTITLE = "Mad fra Solsidens køkken"
+
+MONTH_NAMES = {
+    1: "januar",
+    2: "februar",
+    3: "marts",
+    4: "april",
+    5: "maj",
+    6: "juni",
+    7: "juli",
+    8: "august",
+    9: "september",
+    10: "oktober",
+    11: "november",
+    12: "december",
+}
 
 
 def slugify(value: str) -> str:
@@ -36,6 +54,24 @@ def slugify(value: str) -> str:
     value = re.sub(r"[^a-z0-9\s-]", "", value)
     value = re.sub(r"\s+", "-", value)
     return value
+
+
+def format_danish_date(build_date: date) -> str:
+    return f"{build_date.day}. {MONTH_NAMES[build_date.month]} {build_date.year}"
+
+
+def next_book_version() -> int:
+    if not VERSION_FILE.exists():
+        return 1
+    raw = VERSION_FILE.read_text(encoding="utf-8").strip()
+    if not raw:
+        return 1
+    return int(raw) + 1
+
+
+def write_book_version(version: int) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    VERSION_FILE.write_text(f"{version}\n", encoding="utf-8")
 
 
 @dataclass(frozen=True)
@@ -1431,7 +1467,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     return panel
 
 
-def draw_cover() -> Image.Image:
+def draw_cover(version: int, build_date_text: str) -> Image.Image:
     panel = vertical_gradient(A5_W, A5_H, "#f7f0e5", "#eadbc8")
     draw = ImageDraw.Draw(panel)
     draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#d7c2ad", width=3, fill="#fbf7f1")
@@ -1442,6 +1478,7 @@ def draw_cover() -> Image.Image:
     title_font = load_font(102, "display")
     subtitle_font = load_font(42, "sans")
     strap_font = load_font(28, "sans")
+    meta_font = load_font(24, "sans-bold")
 
     title_y = 260
     for line in wrap_text(draw, TITLE, title_font, A5_W - 2 * 160):
@@ -1449,7 +1486,11 @@ def draw_cover() -> Image.Image:
         title_y += line_height(title_font.size, 1.02)
 
     draw.text((160, title_y + 12), SUBTITLE, font=subtitle_font, fill="#6c5543")
-    draw.text((160, title_y + 74), "Et personligt hæfte med familiens hverdagsretter og bagværk", font=strap_font, fill="#8b725f")
+    draw.text((160, title_y + 74), "Et hæfte med familiens retter og bagværk", font=strap_font, fill="#8b725f")
+    draw.rounded_rectangle([160, title_y + 128, 560, title_y + 178], radius=18, fill="#ead9c7")
+    draw.rounded_rectangle([580, title_y + 128, 980, title_y + 178], radius=18, fill="#ead9c7")
+    draw.text((184, title_y + 141), f"Version {version}", font=meta_font, fill="#5e4939")
+    draw.text((604, title_y + 141), build_date_text, font=meta_font, fill="#5e4939")
 
     draw_cover_illustration(panel)
 
@@ -1467,7 +1508,7 @@ def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Imag
     small_font = load_font(24, "sans")
 
     draw.text((INNER_MARGIN, 140), "Indhold", font=title_font, fill="#2b241f")
-    draw.text((INNER_MARGIN, 240), "Opskrifterne er grupperet efter type for et mere læsbart hæfte.", font=small_font, fill="#756a5f")
+    draw.text((INNER_MARGIN, 240), "Opskrifter", font=small_font, fill="#756a5f")
 
     y = 340
     current_section = None
@@ -1624,12 +1665,14 @@ def write_contents_file(ordered: List[Recipe], page_map: Dict[str, int]) -> None
 
 
 def build() -> None:
+    build_version = next_book_version()
+    build_date_text = format_danish_date(date.today())
     OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
     ordered = ordered_recipes()
     page_map, nutrition_map, raw_keys = build_markdown_and_page_map(ordered)
     write_contents_file(ordered, page_map)
 
-    a5_pages: List[Image.Image] = [draw_cover(), draw_contents(ordered, page_map)]
+    a5_pages: List[Image.Image] = [draw_cover(build_version, build_date_text), draw_contents(ordered, page_map)]
 
     for recipe in ordered:
         per_100, kcal_per_portion, macro_pct = nutrition_map[recipe.title]
@@ -1660,10 +1703,12 @@ def build() -> None:
         spreads.append(compose_spread(a5_pages[index], a5_pages[index + 1]))
 
     spreads[0].save(PDF_PATH, save_all=True, append_images=spreads[1:], resolution=300.0)
+    write_book_version(build_version)
 
     print(f"Skrev {len(ordered)} opskrifter i {RECIPES_DIR}")
     print(f"A5-sider: {len(a5_pages)}")
     print(f"A4-sider i PDF: {len(spreads)}")
+    print(f"Forside: version {build_version}, dato {build_date_text}")
     print(f"PDF: {PDF_PATH}")
 
 

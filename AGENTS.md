@@ -46,6 +46,9 @@ Vis altid:
   - Enkel, pæn, trykegnet
   - Titel: "[INDSÆT TITEL HER]"
   - Enkel stregtegning/minimalistisk råvareillustration
+  - Vis dato og versionsnummer på forsiden
+  - Versionsnummer og dato skal ajourføres hver gang PDF-bogen dannes
+  - Ved tvivl om korrekt dato eller næste versionsnummer skal agenten spørge brugeren
 - Sidste indholdsside:
   - Tabel med energi pr. 100 g for gængse råvarer
   - Skal mindst indeholde alle råvarer brugt i opskrifterne
