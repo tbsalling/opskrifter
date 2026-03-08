@@ -1,4 +1,4 @@
-# Henriettes opskrifter
+# Vores opskrifter
 
 Dette repo indeholder kildefilerne til en dansk kogebog samt en generator, der bygger den færdige PDF.
 
