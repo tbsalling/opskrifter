@@ -243,8 +243,8 @@ SECTION_STYLES = {
 RECIPE_SECTION_SIZE = 26
 RECIPE_TITLE_SIZE = 56
 RECIPE_CHIP_SIZE = 23
-RECIPE_BODY_SIZE = 26
-RECIPE_BODY_BOLD_SIZE = 28
+RECIPE_BODY_SIZE = 27
+RECIPE_BODY_BOLD_SIZE = 29
 RECIPE_SMALL_SIZE = 22
 COMPONENT_PREFIX = ":: "
 
@@ -974,13 +974,13 @@ def render_markdown(recipe: Recipe, per_100: dict, kcal_per_portion: float, macr
             f"- Energi pr. 100 g: {round(per_100['kcal'])} kcal",
             f"- Energi pr. portion: {round(kcal_per_portion)} kcal",
             (
-                "- Makro pr. 100 g: "
+                "- Næringsstoffer pr. 100 g: "
                 f"Protein {per_100['protein']:.1f} g, "
                 f"Kulhydrat {per_100['carbs']:.1f} g, "
                 f"Fedt {per_100['fat']:.1f} g"
             ),
             (
-                "- Makro i energiprocent: "
+                "- Fordeling af energi: "
                 f"Protein {macro_pct['protein']:.0f} %, "
                 f"Kulhydrat {macro_pct['carbs']:.0f} %, "
                 f"Fedt {macro_pct['fat']:.0f} %"
@@ -1275,7 +1275,6 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     chip_font = fonts["chip"]
     body_font = fonts["body"]
     body_bold = fonts["body_bold"]
-    small_font = fonts["small"]
     body_line = fonts["body_line"]
 
     header_top = OUTER_MARGIN + 18
@@ -1429,38 +1428,34 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         fill=style.ink,
     )
     draw.text((INNER_MARGIN + 32, footer_top + 26), "Næringsestimat", font=body_bold, fill="#fffdf9")
-    draw.text(
-        (INNER_MARGIN + 32, footer_top + 76),
+    nutrition_x = INNER_MARGIN + 32
+    nutrition_y = footer_top + 76
+    nutrition_width = A5_W - 2 * INNER_MARGIN - 64
+    nutrition_lines = [
         f"Energi pr. 100 g: {round(per_100['kcal'])} kcal",
-        font=small_font,
-        fill="#fffdf9",
-    )
-    draw.text(
-        (INNER_MARGIN + 32, footer_top + 112),
         f"Energi pr. portion: {round(kcal_per_portion)} kcal",
-        font=small_font,
-        fill="#fffdf9",
-    )
-    draw.text(
-        (INNER_MARGIN + 32, footer_top + 160),
         (
-            f"Makro pr. 100 g: Protein {per_100['protein']:.1f} g  "
+            f"Næringsstoffer pr. 100 g: Protein {per_100['protein']:.1f} g  "
             f"Kulhydrat {per_100['carbs']:.1f} g  "
             f"Fedt {per_100['fat']:.1f} g"
         ),
-        font=small_font,
-        fill="#fffdf9",
-    )
-    draw.text(
-        (INNER_MARGIN + 32, footer_top + 196),
         (
-            f"Makro i energiprocent: Protein {macro_pct['protein']:.0f} %  "
+            f"Fordeling af energi: Protein {macro_pct['protein']:.0f} %  "
             f"Kulhydrat {macro_pct['carbs']:.0f} %  "
             f"Fedt {macro_pct['fat']:.0f} %"
         ),
-        font=small_font,
-        fill="#fffdf9",
-    )
+    ]
+    for line in nutrition_lines:
+        nutrition_y = draw_text_block(
+            draw,
+            nutrition_x,
+            nutrition_y,
+            nutrition_width,
+            line,
+            body_font,
+            "#fffdf9",
+            body_line,
+        )
 
     page_font = load_font(24, "sans")
     page_text = f"side {page_number}"

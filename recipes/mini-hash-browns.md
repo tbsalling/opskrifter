@@ -28,5 +28,5 @@
 ## Næringsestimat
 - Energi pr. 100 g: 125 kcal
 - Energi pr. portion: 131 kcal
-- Makro pr. 100 g: Protein 1.9 g, Kulhydrat 18.4 g, Fedt 4.9 g
-- Makro i energiprocent: Protein 6 %, Kulhydrat 59 %, Fedt 35 %
+- Næringsstoffer pr. 100 g: Protein 1.9 g, Kulhydrat 18.4 g, Fedt 4.9 g
+- Fordeling af energi: Protein 6 %, Kulhydrat 59 %, Fedt 35 %
