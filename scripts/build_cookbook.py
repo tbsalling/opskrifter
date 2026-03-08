@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PIL import Image, ImageDraw, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont
 
 ROOT = Path(__file__).resolve().parents[1]
 RECIPES_DIR = ROOT / "recipes"
@@ -17,7 +17,8 @@ A4_W, A4_H = 3508, 2480
 A5_W, A5_H = A4_W // 2, A4_H
 OUTER_MARGIN = 70
 INNER_MARGIN = 96
-TITLE = "[INDSÆT TITEL HER]"
+TITLE = "Henriettes opskrifter"
+SUBTITLE = "Mad fra mors køkken"
 
 
 def slugify(value: str) -> str:
@@ -196,6 +197,13 @@ SECTION_STYLES = {
     "Aftensmad": SectionStyle("#2f1f17", "#f8eee8", "#bf6845", "#eed1c3"),
     "Weekend": SectionStyle("#1d2530", "#edf1f6", "#7288a4", "#d5ddea"),
 }
+
+RECIPE_SECTION_SIZE = 26
+RECIPE_TITLE_SIZE = 56
+RECIPE_CHIP_SIZE = 23
+RECIPE_BODY_SIZE = 26
+RECIPE_BODY_BOLD_SIZE = 28
+RECIPE_SMALL_SIZE = 22
 
 
 RECIPES: List[Recipe] = [
@@ -876,51 +884,50 @@ def section_label(section: str) -> str:
     return labels[section]
 
 
-def fit_recipe_fonts(recipe: Recipe, draw: ImageDraw.ImageDraw, column_width: int, body_top: int, footer_h: int):
-    for size in [33, 31, 29, 27, 25, 23]:
-        title_font = load_font(size + 18, "display")
-        chip_font = load_font(size - 3, "sans-bold")
-        section_font = load_font(size - 4, "sans-bold")
-        body_font = load_font(size, "sans")
-        body_bold = load_font(size, "sans-bold")
-        small_font = load_font(size - 4, "sans")
+def recipe_fonts():
+    return {
+        "title": load_font(RECIPE_TITLE_SIZE, "display"),
+        "chip": load_font(RECIPE_CHIP_SIZE, "sans-bold"),
+        "section": load_font(RECIPE_SECTION_SIZE, "sans-bold"),
+        "body": load_font(RECIPE_BODY_SIZE, "sans"),
+        "body_bold": load_font(RECIPE_BODY_BOLD_SIZE, "sans-bold"),
+        "small": load_font(RECIPE_SMALL_SIZE, "sans"),
+        "body_line": line_height(RECIPE_BODY_SIZE, 1.28),
+        "small_line": line_height(RECIPE_SMALL_SIZE, 1.26),
+        "title_line": line_height(RECIPE_TITLE_SIZE, 1.05),
+    }
 
-        body_line = line_height(size, 1.28)
-        small_line = line_height(size - 4, 1.26)
 
-        left_height = body_line * 2
-        for ingredient in recipe.ingredients:
-            left_height += len(wrap_text(draw, f"• {ingredient}", body_font, column_width - 28)) * body_line
+def tag_size(draw: ImageDraw.ImageDraw, text: str, font) -> Tuple[int, int]:
+    bbox = draw.textbbox((0, 0), text, font=font)
+    width = bbox[2] - bbox[0] + 38
+    height = bbox[3] - bbox[1] + 20
+    return width, height
 
-        right_height = body_line * 2
-        for index, step in enumerate(recipe.method, start=1):
-            right_height += len(wrap_text(draw, f"{index}. {step}", body_font, column_width - 28)) * body_line
 
-        title_lines = wrap_text(draw, recipe.title, title_font, A5_W - 2 * INNER_MARGIN - 60)
-        title_height = len(title_lines) * line_height(size + 18, 1.08)
-        header_height = 290 + title_height
-        needed = body_top + max(left_height, right_height) + footer_h + small_line * 3
-        if needed < A5_H - OUTER_MARGIN:
-            return {
-                "title": title_font,
-                "chip": chip_font,
-                "section": section_font,
-                "body": body_font,
-                "body_bold": body_bold,
-                "small": small_font,
-                "body_line": body_line,
-                "small_line": small_line,
-                "title_height": title_height,
-                "header_height": header_height,
-            }
-    raise RuntimeError(f"Kunne ikke få opskriften til at passe på siden: {recipe.title}")
+def measure_recipe_columns(
+    recipe: Recipe,
+    draw: ImageDraw.ImageDraw,
+    ingredient_width: int,
+    method_width: int,
+    body_font,
+    body_line: int,
+) -> Tuple[int, int]:
+    left_height = 0
+    for ingredient in recipe.ingredients:
+        left_height += len(wrap_text(draw, f"• {ingredient}", body_font, ingredient_width)) * body_line
+
+    right_height = 0
+    for index, step in enumerate(recipe.method, start=1):
+        right_height += len(wrap_text(draw, f"{index}. {step}", body_font, method_width)) * body_line
+        right_height += int(body_line * 0.15)
+
+    return left_height, right_height
 
 
 def draw_tag(draw: ImageDraw.ImageDraw, xy: Tuple[int, int], text: str, font, fill: str, ink: str) -> None:
     x, y = xy
-    bbox = draw.textbbox((x, y), text, font=font)
-    width = bbox[2] - bbox[0] + 38
-    height = bbox[3] - bbox[1] + 20
+    width, height = tag_size(draw, text, font)
     draw.rounded_rectangle([x, y, x + width, y + height], radius=18, fill=fill)
     draw.text((x + 19, y + 10), text, font=font, fill=ink)
 
@@ -933,10 +940,123 @@ def draw_text_block(draw: ImageDraw.ImageDraw, x: int, y: int, width: int, text:
     return current_y
 
 
+def hex_to_rgb(value: str) -> Tuple[int, int, int]:
+    value = value.lstrip("#")
+    return tuple(int(value[index:index + 2], 16) for index in (0, 2, 4))
+
+
+def vertical_gradient(width: int, height: int, top_hex: str, bottom_hex: str) -> Image.Image:
+    top = hex_to_rgb(top_hex)
+    bottom = hex_to_rgb(bottom_hex)
+    image = Image.new("RGB", (width, height), top_hex)
+    draw = ImageDraw.Draw(image)
+    for y in range(height):
+        ratio = y / max(height - 1, 1)
+        color = tuple(int(top[i] + (bottom[i] - top[i]) * ratio) for i in range(3))
+        draw.line([(0, y), (width, y)], fill=color)
+    return image
+
+
+def blurred_ellipse(overlay: Image.Image, bbox: List[int], fill, blur_radius: int) -> None:
+    shadow = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).ellipse(bbox, fill=fill)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(blur_radius))
+    overlay.alpha_composite(shadow)
+
+
+def blurred_roundrect(overlay: Image.Image, bbox: List[int], radius: int, fill, blur_radius: int) -> None:
+    shadow = Image.new("RGBA", overlay.size, (0, 0, 0, 0))
+    ImageDraw.Draw(shadow).rounded_rectangle(bbox, radius=radius, fill=fill)
+    shadow = shadow.filter(ImageFilter.GaussianBlur(blur_radius))
+    overlay.alpha_composite(shadow)
+
+
+def draw_cover_illustration(base: Image.Image) -> None:
+    overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    draw = ImageDraw.Draw(overlay)
+
+    art_box = [130, 760, A5_W - 130, A5_H - 250]
+    blurred_roundrect(overlay, [art_box[0] + 12, art_box[1] + 18, art_box[2] + 12, art_box[3] + 18], 48, (60, 36, 22, 45), 22)
+    draw.rounded_rectangle(art_box, radius=48, fill="#efe1d0", outline="#dac4ae", width=3)
+
+    art_w = art_box[2] - art_box[0]
+    art_h = art_box[3] - art_box[1]
+    art_bg = vertical_gradient(art_w, art_h, "#f6ede2", "#e7cfb8")
+    overlay.paste(art_bg.convert("RGBA"), (art_box[0], art_box[1]))
+    draw.rounded_rectangle(art_box, radius=48, outline="#d5b99d", width=3)
+
+    table_top = art_box[1] + art_h * 0.66
+    draw.rectangle([art_box[0], int(table_top), art_box[2], art_box[3]], fill="#7a543d")
+    draw.rectangle([art_box[0], int(table_top + 48), art_box[2], art_box[3]], fill="#654533")
+
+    cloth = [
+        (art_box[0] + 120, int(table_top) - 20),
+        (art_box[0] + 430, int(table_top) - 40),
+        (art_box[0] + 610, art_box[3] - 60),
+        (art_box[0] + 250, art_box[3] - 20),
+    ]
+    draw.polygon(cloth, fill="#d4ddd8")
+    draw.line([cloth[0], cloth[2][0] - 70, cloth[2][1] - 30], fill="#b8c4be", width=4)
+    draw.line([cloth[1], cloth[2][0] - 140, cloth[2][1] - 120], fill="#b8c4be", width=4)
+
+    blurred_ellipse(overlay, [art_box[0] + 340, int(table_top) - 10, art_box[0] + 1040, int(table_top) + 180], (40, 20, 12, 70), 28)
+    draw.ellipse([art_box[0] + 380, int(table_top) - 80, art_box[0] + 1000, int(table_top) + 120], fill="#f9f4ed", outline="#d8cdc1", width=4)
+    draw.ellipse([art_box[0] + 440, int(table_top) - 20, art_box[0] + 940, int(table_top) + 90], fill="#efe5d8")
+
+    tomato_centers = [
+        (art_box[0] + 560, int(table_top) - 70, 96),
+        (art_box[0] + 690, int(table_top) - 40, 84),
+        (art_box[0] + 810, int(table_top) - 72, 92),
+        (art_box[0] + 770, int(table_top) + 20, 78),
+        (art_box[0] + 620, int(table_top) + 18, 74),
+    ]
+    for cx, cy, r in tomato_centers:
+        blurred_ellipse(overlay, [cx - r + 10, cy - r + 18, cx + r + 10, cy + r + 18], (64, 22, 16, 54), 14)
+        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill="#c84d3a", outline="#9c3326", width=3)
+        draw.ellipse([cx - r + 22, cy - r + 18, cx - 4, cy - 8], fill="#e38773")
+        draw.polygon(
+            [(cx, cy - r - 8), (cx + 16, cy - r + 16), (cx, cy - r + 8), (cx - 16, cy - r + 16)],
+            fill="#517649",
+        )
+
+    leaves = [
+        [art_box[0] + 880, int(table_top) - 10, art_box[0] + 1010, int(table_top) + 90],
+        [art_box[0] + 930, int(table_top) + 20, art_box[0] + 1060, int(table_top) + 120],
+        [art_box[0] + 510, int(table_top) + 40, art_box[0] + 650, int(table_top) + 150],
+        [art_box[0] + 420, int(table_top) - 10, art_box[0] + 560, int(table_top) + 90],
+    ]
+    for bbox in leaves:
+        draw.ellipse(bbox, fill="#5b7f54", outline="#456540", width=2)
+        draw.line([bbox[0] + 22, (bbox[1] + bbox[3]) // 2, bbox[2] - 22, (bbox[1] + bbox[3]) // 2], fill="#dbe7d1", width=2)
+
+    bread = [art_box[0] + 1040, int(table_top) - 10, art_box[0] + 1390, int(table_top) + 210]
+    blurred_ellipse(overlay, [bread[0] + 10, bread[1] + 20, bread[2] + 20, bread[3] + 28], (30, 18, 10, 48), 18)
+    draw.rounded_rectangle(bread, radius=90, fill="#bf8754", outline="#8d6039", width=4)
+    draw.arc([bread[0] + 60, bread[1] + 30, bread[0] + 180, bread[3] - 30], start=300, end=70, fill="#f1d3a4", width=8)
+    draw.arc([bread[0] + 150, bread[1] + 26, bread[0] + 270, bread[3] - 34], start=300, end=70, fill="#f1d3a4", width=8)
+    draw.arc([bread[0] + 240, bread[1] + 32, bread[0] + 340, bread[3] - 36], start=300, end=70, fill="#f1d3a4", width=8)
+
+    for gx, gy in [(art_box[0] + 1060, int(table_top) + 180), (art_box[0] + 1130, int(table_top) + 210)]:
+        blurred_ellipse(overlay, [gx + 10, gy + 16, gx + 126, gy + 126], (40, 24, 16, 44), 12)
+        draw.ellipse([gx, gy, gx + 116, gy + 116], fill="#f3ece3", outline="#d7c8b8", width=3)
+        draw.arc([gx + 14, gy + 34, gx + 60, gy + 104], start=270, end=70, fill="#dccdbf", width=3)
+        draw.arc([gx + 54, gy + 22, gx + 104, gy + 92], start=250, end=60, fill="#dccdbf", width=3)
+
+    spoon_handle = [art_box[0] + 300, int(table_top) + 180, art_box[0] + 760, art_box[3] - 70]
+    draw.line([spoon_handle[0], spoon_handle[1], spoon_handle[2], spoon_handle[3]], fill="#a9774f", width=24)
+    draw.line([spoon_handle[0], spoon_handle[1], spoon_handle[2], spoon_handle[3]], fill="#c69467", width=14)
+    draw.ellipse([art_box[0] + 210, int(table_top) + 110, art_box[0] + 360, int(table_top) + 280], fill="#b78359", outline="#8d6039", width=4)
+    draw.ellipse([art_box[0] + 235, int(table_top) + 135, art_box[0] + 335, int(table_top) + 245], fill="#7d5034")
+
+    merged = Image.alpha_composite(base.convert("RGBA"), overlay)
+    base.paste(merged.convert("RGB"))
+
+
 def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, macro_pct: dict, page_number: int) -> Image.Image:
     style = SECTION_STYLES[recipe.section]
     panel = Image.new("RGB", (A5_W, A5_H), "#fcfaf7")
     draw = ImageDraw.Draw(panel)
+    fonts = recipe_fonts()
 
     draw.rounded_rectangle(
         [28, 28, A5_W - 28, A5_H - 28],
@@ -946,36 +1066,45 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         fill="#fffdf9",
     )
     draw_pattern(draw, style)
+    left_x = INNER_MARGIN
+    section_font = fonts["section"]
+    title_font = fonts["title"]
+    chip_font = fonts["chip"]
+    body_font = fonts["body"]
+    body_bold = fonts["body_bold"]
+    small_font = fonts["small"]
+    body_line = fonts["body_line"]
+
+    header_top = OUTER_MARGIN + 18
+    tag_y = header_top + 26
+    title_box_width = A5_W - 2 * INNER_MARGIN - 48
+    title_lines = wrap_text(draw, recipe.title, title_font, title_box_width)
+    tag_height = tag_size(draw, section_label(recipe.section), section_font)[1]
+    chip_height = tag_size(draw, f"{recipe.servings} portioner", chip_font)[1]
+
+    title_start_y = tag_y + tag_height + 28
+    title_bottom_y = title_start_y + len(title_lines) * fonts["title_line"]
+    chip_y = title_bottom_y + 24
+    header_bottom = chip_y + chip_height + 34
+
     draw.rounded_rectangle(
-        [OUTER_MARGIN, OUTER_MARGIN, A5_W - OUTER_MARGIN, 240],
+        [OUTER_MARGIN, header_top, A5_W - OUTER_MARGIN, header_bottom],
         radius=40,
         fill=style.panel,
+        outline=style.soft,
+        width=2,
     )
 
-    left_x = INNER_MARGIN
-    top_y = 120
-    section_font = load_font(28, "sans-bold")
-    draw_tag(draw, (left_x, top_y), section_label(recipe.section), section_font, style.accent, "#fffdf9")
+    draw_tag(draw, (left_x, tag_y), section_label(recipe.section), section_font, style.accent, "#fffdf9")
 
-    sizing = fit_recipe_fonts(recipe, draw, 520, 720, 300)
-    title_font = sizing["title"]
-    chip_font = sizing["chip"]
-    body_font = sizing["body"]
-    body_bold = sizing["body_bold"]
-    small_font = sizing["small"]
-    body_line = sizing["body_line"]
-    small_line = sizing["small_line"]
-
-    title_y = 215
-    for line in wrap_text(draw, recipe.title, title_font, A5_W - 2 * INNER_MARGIN - 30):
+    title_y = title_start_y
+    for line in title_lines:
         draw.text((left_x, title_y), line, font=title_font, fill=style.ink)
-        title_y += line_height(title_font.size, 1.05)
+        title_y += fonts["title_line"]
 
-    meta_y = title_y + 16
-    draw_tag(draw, (left_x, meta_y), f"{recipe.servings} portioner", chip_font, style.soft, style.ink)
-    draw_tag(draw, (left_x + 220, meta_y), f"{round(kcal_per_portion)} kcal/portion", chip_font, style.soft, style.ink)
+    draw_tag(draw, (left_x, chip_y), f"{recipe.servings} portioner", chip_font, style.soft, style.ink)
+    draw_tag(draw, (left_x + 240, chip_y), f"{round(kcal_per_portion)} kcal/portion", chip_font, style.soft, style.ink)
 
-    header_bottom = meta_y + 88
     column_gap = 40
     content_x = INNER_MARGIN
     content_w = A5_W - 2 * INNER_MARGIN
@@ -984,16 +1113,34 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     ingredients_x = content_x
     method_x = ingredients_x + ingredients_w + column_gap
     body_y = header_bottom + 40
+    footer_top = A5_H - 360
+    body_bottom = footer_top - 44
+
+    left_content_h, right_content_h = measure_recipe_columns(
+        recipe,
+        draw,
+        ingredients_w - 56,
+        method_w - 56,
+        body_font,
+        body_line,
+    )
+    available_h = body_bottom - (body_y + 96) - 24
+    required_h = max(left_content_h, right_content_h)
+    if required_h > available_h:
+        raise RuntimeError(
+            f"Opskriften '{recipe.title}' passer ikke med den faste typografi. "
+            f"Kræver {required_h}px, har {available_h}px."
+        )
 
     draw.rounded_rectangle(
-        [ingredients_x, body_y, ingredients_x + ingredients_w, A5_H - 420],
+        [ingredients_x, body_y, ingredients_x + ingredients_w, body_bottom],
         radius=24,
         fill="#fff7ef",
         outline=style.soft,
         width=2,
     )
     draw.rounded_rectangle(
-        [method_x, body_y, method_x + method_w, A5_H - 420],
+        [method_x, body_y, method_x + method_w, body_bottom],
         radius=24,
         fill="#ffffff",
         outline=style.soft,
@@ -1040,7 +1187,6 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         )
         cursor_right += int(body_line * 0.15)
 
-    footer_top = A5_H - 360
     draw.rounded_rectangle(
         [INNER_MARGIN, footer_top, A5_W - INNER_MARGIN, A5_H - 110],
         radius=28,
@@ -1088,43 +1234,28 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
 
 
 def draw_cover() -> Image.Image:
-    panel = Image.new("RGB", (A5_W, A5_H), "#f6efe5")
+    panel = vertical_gradient(A5_W, A5_H, "#f7f0e5", "#eadbc8")
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#d9c7b4", width=3, fill="#f9f4ec")
-    draw.rounded_rectangle([90, 90, A5_W - 90, A5_H - 90], radius=40, outline="#caa587", width=3)
+    draw.rounded_rectangle([28, 28, A5_W - 28, A5_H - 28], radius=34, outline="#d7c2ad", width=3, fill="#fbf7f1")
+    draw.rounded_rectangle([84, 84, A5_W - 84, A5_H - 84], radius=42, outline="#cdb094", width=2)
+    draw.ellipse([A5_W - 620, 120, A5_W - 110, 630], outline="#e3d0be", width=4)
+    draw.ellipse([A5_W - 540, 190, A5_W - 20, 710], outline="#efe4d8", width=2)
 
-    draw.ellipse([A5_W - 610, 140, A5_W - 120, 620], outline="#d7b99d", width=4)
-    draw.ellipse([A5_W - 520, 220, A5_W - 30, 710], outline="#ead7c5", width=2)
+    title_font = load_font(102, "display")
+    subtitle_font = load_font(42, "sans")
+    strap_font = load_font(28, "sans")
 
-    title_font = load_font(104, "display")
-    sub_font = load_font(34, "sans")
-    draw.text((160, 320), TITLE, font=title_font, fill="#2e241c")
-    draw.text((160, 470), "Dansk opskriftshæfte", font=sub_font, fill="#6a5442")
-    draw.text((160, 520), "trykklart layout i A4 tværformat med A5-opslag", font=sub_font, fill="#8d7765")
+    title_y = 260
+    for line in wrap_text(draw, TITLE, title_font, A5_W - 2 * 160):
+        draw.text((160, title_y), line, font=title_font, fill="#2f251d")
+        title_y += line_height(title_font.size, 1.02)
 
-    # Minimalistisk råvaretegning
-    draw.line([230, 760, 230, 1300], fill="#3b2a1f", width=5)
-    draw.line([230, 860, 150, 800], fill="#3b2a1f", width=4)
-    draw.line([230, 920, 135, 860], fill="#3b2a1f", width=4)
-    draw.line([230, 980, 150, 930], fill="#3b2a1f", width=4)
-    draw.line([230, 1040, 145, 990], fill="#3b2a1f", width=4)
-    draw.line([230, 860, 310, 800], fill="#3b2a1f", width=4)
-    draw.line([230, 920, 325, 860], fill="#3b2a1f", width=4)
-    draw.line([230, 980, 310, 930], fill="#3b2a1f", width=4)
-    draw.line([230, 1040, 315, 990], fill="#3b2a1f", width=4)
+    draw.text((160, title_y + 12), SUBTITLE, font=subtitle_font, fill="#6c5543")
+    draw.text((160, title_y + 74), "Et personligt hæfte med familiens hverdagsretter og bagværk", font=strap_font, fill="#8b725f")
 
-    draw.ellipse([520, 840, 770, 1080], outline="#3b2a1f", width=5)
-    draw.line([650, 835, 700, 760], fill="#3b2a1f", width=4)
-    draw.arc([480, 1040, 820, 1320], start=195, end=340, fill="#3b2a1f", width=5)
+    draw_cover_illustration(panel)
 
-    draw.line([1000, 760, 1000, 1180], fill="#3b2a1f", width=5)
-    draw.line([1000, 840, 930, 790], fill="#3b2a1f", width=4)
-    draw.line([1000, 900, 1075, 850], fill="#3b2a1f", width=4)
-    draw.line([1000, 960, 930, 910], fill="#3b2a1f", width=4)
-    draw.line([1000, 1020, 1075, 970], fill="#3b2a1f", width=4)
-    draw.line([1000, 1080, 940, 1030], fill="#3b2a1f", width=4)
-
-    draw.text((160, A5_H - 190), "Samlet, standardiseret og sat op til print", font=load_font(30, "sans"), fill="#6a5442")
+    draw.text((160, A5_H - 190), "Opskrifter sat op til print og hæftning", font=load_font(30, "sans"), fill="#6a5442")
     return panel
 
 
