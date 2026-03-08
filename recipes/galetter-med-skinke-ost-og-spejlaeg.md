@@ -13,12 +13,12 @@
 - 4 tsk smør til stegning
 
 ### Skinkefyld
-- 4 skiver cheddar eller mozzarella
+- Skinkefyld: 4 skiver cheddar eller mozzarella
 - 8 skiver parmaskinke
 - 4 æg
 
 ### Til servering
-- 50 g frisk spinat
+- Til servering: 50 g frisk spinat
 
 ## Fremgangsmåde
 
