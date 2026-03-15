@@ -264,10 +264,10 @@ SECTION_STYLES = {
 
 RECIPE_SECTION_SIZE = 32
 RECIPE_TITLE_SIZE = 70
-RECIPE_CHIP_SIZE = 28
-RECIPE_BODY_SIZE = 34
-RECIPE_BODY_BOLD_SIZE = 36
-RECIPE_SMALL_SIZE = 27
+RECIPE_CHIP_SIZE = 36
+RECIPE_BODY_SIZE = 42
+RECIPE_BODY_BOLD_SIZE = 44
+RECIPE_SMALL_SIZE = 36
 COMPONENT_PREFIX = ":: "
 
 
@@ -1736,8 +1736,10 @@ def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Imag
 
     title_font = load_font(96, "display")
     section_font = load_font(38, "sans-bold")
-    body_font = load_font(36, "sans")
+    body_font = load_font(RECIPE_BODY_SIZE, "sans")
     small_font = load_font(30, "sans")
+    row_height = line_height(RECIPE_BODY_SIZE, 1.18)
+    separator_y = int(row_height * 0.82)
 
     draw.text((INNER_MARGIN, 140), "Indhold", font=title_font, fill="#2b241f")
     draw.text((INNER_MARGIN, 260), "Opskrifter", font=small_font, fill="#756a5f")
@@ -1746,6 +1748,8 @@ def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Imag
     current_section = None
     for recipe in ordered:
         if recipe.section != current_section:
+            if current_section is not None:
+                y += 28
             current_section = recipe.section
             style = SECTION_STYLES[current_section]
             draw.rounded_rectangle([INNER_MARGIN, y, A4_W - INNER_MARGIN, y + 64], radius=18, fill=style.panel)
@@ -1757,8 +1761,8 @@ def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Imag
         bbox = draw.textbbox((0, 0), number_text, font=body_font)
         number_x = A4_W - INNER_MARGIN - (bbox[2] - bbox[0])
         draw.text((number_x, y), number_text, font=body_font, fill="#7f7266")
-        draw.line([INNER_MARGIN + 10, y + 50, A4_W - INNER_MARGIN, y + 50], fill="#ece4da", width=1)
-        y += 64
+        draw.line([INNER_MARGIN + 10, y + separator_y, A4_W - INNER_MARGIN, y + separator_y], fill="#ece4da", width=1)
+        y += row_height
 
     draw.text((A4_W - 200, A4_H - 84), "side 2", font=small_font, fill="#857a6c")
     return panel
