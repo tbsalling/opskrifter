@@ -271,6 +271,8 @@ RECIPE_BODY_SIZE = 42
 RECIPE_BODY_BOLD_SIZE = 44
 RECIPE_SMALL_SIZE = 36
 COMPONENT_PREFIX = ":: "
+COMPONENT_TOP_GAP = 1.1
+COMPONENT_BOTTOM_GAP = 0.14
 
 
 RECIPES: List[Recipe] = [
@@ -1367,9 +1369,9 @@ def measure_recipe_columns(
     left_height = 0
     for ingredient in ingredient_entries:
         if is_component_entry(ingredient):
-            left_height += body_line
+            left_height += int(body_line * COMPONENT_TOP_GAP)
             left_height += len(wrap_text(draw, component_name(ingredient), body_bold, ingredient_width)) * body_line
-            left_height += int(body_line * 0.2)
+            left_height += int(body_line * COMPONENT_BOTTOM_GAP)
         else:
             left_height += len(wrap_text(draw, f"• {ingredient}", body_font, ingredient_width)) * body_line
 
@@ -1378,9 +1380,9 @@ def measure_recipe_columns(
     for step in method_entries:
         if is_component_entry(step):
             step_number = 1
-            right_height += body_line
+            right_height += int(body_line * COMPONENT_TOP_GAP)
             right_height += len(wrap_text(draw, component_name(step), body_bold, method_width)) * body_line
-            right_height += int(body_line * 0.2)
+            right_height += int(body_line * COMPONENT_BOTTOM_GAP)
         else:
             right_height += len(wrap_text(draw, f"{step_number}. {step}", body_font, method_width)) * body_line
             right_height += int(body_line * 0.15)
@@ -1645,7 +1647,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     cursor_left = body_y + 120
     for ingredient in ingredient_entries:
         if is_component_entry(ingredient):
-            cursor_left += int(body_line * 0.35)
+            cursor_left += int(body_line * COMPONENT_TOP_GAP)
             cursor_left = draw_text_block(
                 draw,
                 ingredients_x + 28,
@@ -1656,7 +1658,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
                 style.accent,
                 body_line,
             )
-            cursor_left += int(body_line * 0.1)
+            cursor_left += int(body_line * COMPONENT_BOTTOM_GAP)
         else:
             cursor_left = draw_text_block(
                 draw,
@@ -1674,7 +1676,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     for step in method_entries:
         if is_component_entry(step):
             step_number = 1
-            cursor_right += int(body_line * 0.35)
+            cursor_right += int(body_line * COMPONENT_TOP_GAP)
             cursor_right = draw_text_block(
                 draw,
                 method_x + 28,
@@ -1685,7 +1687,7 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
                 style.accent,
                 body_line,
             )
-            cursor_right += int(body_line * 0.1)
+            cursor_right += int(body_line * COMPONENT_BOTTOM_GAP)
         else:
             cursor_right = draw_text_block(
                 draw,
