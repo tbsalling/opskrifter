@@ -168,6 +168,8 @@ NDB: Dict[str, Nutrient] = {
     "æble": Nutrient(52, 0.3, 14, 0.2),
     "cidereddike": Nutrient(21, 0, 0.9, 0),
     "æblejuice": Nutrient(46, 0.1, 11, 0.1),
+    "minimælk": Nutrient(37, 3.4, 4.7, 0.5),
+    "flødeost_urter": Nutrient(250, 6, 3, 24),
 }
 
 DISPLAY_NAMES = {
@@ -238,6 +240,8 @@ DISPLAY_NAMES = {
     "æble": "Æble",
     "cidereddike": "Æblecidereddike",
     "æblejuice": "Æblejuice",
+    "minimælk": "Minimælk",
+    "flødeost_urter": "Flødeost med hvidløg og urter",
 }
 
 SECTION_STYLES = {
@@ -788,6 +792,55 @@ RECIPES: List[Recipe] = [
             ("parmesan", 50),
             ("revet_ost_13", 50),
             ("oregano", 2),
+        ],
+    ),
+    Recipe(
+        section="Aftensmad",
+        title="Spicy Mac & Cheese",
+        servings=5,
+        finished_weight_g=2015,
+        ingredients=[
+            ":: Kød og pasta",
+            "500 g hakket oksekød, 4-7 %",
+            "350 g suppehorn (pasta)",
+            "10 g oksebouillon (terning)",
+            "6 dl kogende vand",
+            ":: Ost og mejeri",
+            "100 g revet ost",
+            "50 g flødeost med hvidløg og urter",
+            "200 g minimælk",
+            "2 skiver cheddar (ca. 40 g)",
+            ":: Grøntsager og smag",
+            "100 g rødløg, hakket",
+            "40 g tomatpuré",
+            ":: Krydderier",
+            "Salt",
+            "Sort peber",
+            "Løgpulver",
+            "Cayennepeber",
+            "Paprika",
+        ],
+        method=[
+            ":: Kød og løg",
+            "Brun oksekødet i en stor gryde ved høj varme, til det er gennemstegt og let karamelliseret.",
+            "Tilsæt hakket rødløg og svits ved middel varme, til løget er blødt og let gyldent.",
+            "Krydr med salt, sort peber, løgpulver, paprika og cayennepeber, og rør det godt sammen.",
+            ":: Sauce og pasta",
+            "Lav et lille hul i midten af gryden og tilsæt tomatpuréen. Lad den stege i 1-2 minutter, så den mister sin råsmag.",
+            "Hæld kogende vand, oksebouillon og minimælk i gryden, og rør det hele godt sammen.",
+            "Tilsæt suppehornene direkte i gryden. Lad retten simre ved middel varme i 12-15 minutter under jævnlig omrøring, indtil pastaen er mør og det meste af væsken er absorberet.",
+            ":: Afslutning",
+            "Skru ned for varmen og rør flødeost, revet ost og cheddar i, til retten er ensartet og cremet. Smag til med salt, peber og cayennepeber.",
+        ],
+        nutrient_items=[
+            ("oksekød_5", 500),
+            ("pasta_tør", 350),
+            ("revet_ost_13", 100),
+            ("flødeost_urter", 50),
+            ("minimælk", 200),
+            ("løg", 100),
+            ("tomatpuré", 40),
+            ("cheddar", 40),
         ],
     ),
     Recipe(

@@ -21,8 +21,9 @@
 - Hvid fisk med spinat og mornaysauce (side 15)
 - Pastarør med østershatte og fløde (side 16)
 - Proteinrig pastaret med oksekød (side 17)
+- Spicy Mac & Cheese (side 18)
 ## Weekend
 
-- Aligot (side 18)
-- Langtidsstegt and (side 19)
-- Pulled pork (side 20)
+- Aligot (side 19)
+- Langtidsstegt and (side 20)
+- Pulled pork (side 21)
