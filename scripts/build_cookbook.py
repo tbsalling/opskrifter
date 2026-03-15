@@ -172,6 +172,8 @@ NDB: Dict[str, Nutrient] = {
     "flødeost_urter": Nutrient(250, 6, 3, 24),
     "kyllingebryst": Nutrient(107, 22, 0, 2.4),
     "kokosmælk": Nutrient(177, 1.8, 2.7, 18),
+    "kærnemælk": Nutrient(37, 3.5, 4.7, 0.5),
+    "sigtemel": Nutrient(330, 11, 67, 1.5),
 }
 
 DISPLAY_NAMES = {
@@ -246,6 +248,8 @@ DISPLAY_NAMES = {
     "flødeost_urter": "Flødeost med hvidløg og urter",
     "kyllingebryst": "Kyllingebryst",
     "kokosmælk": "Kokosmælk",
+    "kærnemælk": "Kærnemælk",
+    "sigtemel": "Sigtemel",
 }
 
 SECTION_STYLES = {
@@ -390,6 +394,40 @@ RECIPES: List[Recipe] = [
             ("hvedemel", 500),
             ("solsikkekerner", 60),
             ("mørk_sirup", 30),
+        ],
+    ),
+    Recipe(
+        section="Bagværk",
+        title="Sigtebrød",
+        servings=2,
+        finished_weight_g=1470,
+        ingredients=[
+            "50 g gær",
+            "3 dl koldt vand",
+            "4 dl kærnemælk",
+            "30 g smør, smeltet",
+            "2 tsk fint salt",
+            "700 g sigtemel",
+            "ca. 300 g hvedemel",
+            "Sammenpisket æg, mælk eller vand til pensling",
+        ],
+        method=[
+            "Rør gæren ud i vand og kærnemælk i en røreskål.",
+            "Smelt smørret og lad det køle lidt af. Tilsæt det til dejen sammen med salt, sigtemel og hvedemel.",
+            "Ælt dejen grundigt i 8-10 minutter, til den er glat og smidig.",
+            "Dæk skålen til og lad dejen hæve lunt i ca. 1 time, til den er tydeligt hævet.",
+            "Slå dejen ned, del den i to og form hvert stykke til et aflangt brød.",
+            "Læg brødene på en bageplade med bagepapir og lad dem efterhæve i 30 minutter.",
+            "Rids brødene med en skarp kniv og pensl med sammenpisket æg, mælk eller vand.",
+            "Bag ved 200 °C i 30-35 minutter, til brødene er gyldne og hule at høre på underneath.",
+            "Lad brødene køle af på rist inden udskæring.",
+        ],
+        nutrient_items=[
+            ("gær", 50),
+            ("kærnemælk", 400),
+            ("smør", 30),
+            ("sigtemel", 700),
+            ("hvedemel", 300),
         ],
     ),
     Recipe(
