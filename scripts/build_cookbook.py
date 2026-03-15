@@ -2,7 +2,7 @@
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Dict, List, Tuple
@@ -90,6 +90,7 @@ class Recipe:
     ingredients: List[str]
     method: List[str]
     nutrient_items: List[Tuple[str, float]]
+    tags: List[str] = field(default_factory=list)
 
 
 @dataclass(frozen=True)
@@ -174,6 +175,7 @@ NDB: Dict[str, Nutrient] = {
     "kokosmælk": Nutrient(177, 1.8, 2.7, 18),
     "kærnemælk": Nutrient(37, 3.5, 4.7, 0.5),
     "sigtemel": Nutrient(330, 11, 67, 1.5),
+    "havremælk": Nutrient(45, 0.9, 8.0, 1.5),
 }
 
 DISPLAY_NAMES = {
@@ -250,6 +252,7 @@ DISPLAY_NAMES = {
     "kokosmælk": "Kokosmælk",
     "kærnemælk": "Kærnemælk",
     "sigtemel": "Sigtemel",
+    "havremælk": "Havremælk / plantemælk",
 }
 
 SECTION_STYLES = {
@@ -428,6 +431,38 @@ RECIPES: List[Recipe] = [
             ("smør", 30),
             ("sigtemel", 700),
             ("hvedemel", 300),
+        ],
+        tags=["Jul"],
+    ),
+    Recipe(
+        section="Bagværk",
+        title="Morgenmadsvafler",
+        servings=2,
+        finished_weight_g=480,
+        ingredients=[
+            ":: Vaflerne",
+            "150 g havregryn",
+            "3 dl plantemælk (rismælk eller havremælk)",
+            "2 æg",
+            "1 tsk vaniljepulver",
+            "Kokosolie til vaffeljernet",
+            ":: Topping",
+            "Sirup",
+            "Rosiner",
+            "Frisk frugt",
+        ],
+        method=[
+            "Blend havregrynene til mel i en minihakker eller blender.",
+            "Pisk havregrynmel, plantemælk, æg og vaniljepulver godt sammen til en ensartet dej.",
+            "Varm vaffeljernet op til niveau 6 (eller højt). Smør begge sider med kokosolie og luk jernet. Vent til det er gennemvarmt.",
+            "Hæld dej på jernet — ca. halvdelen ad gangen — og bag vaflerne i 3-4 minutter, til de er gyldne og sprøde.",
+            "Gentag med den resterende dej.",
+            "Server straks med topping efter smag, fx sirup, rosiner eller frisk frugt.",
+        ],
+        nutrient_items=[
+            ("havregryn", 150),
+            ("havremælk", 300),
+            ("æg", 110),
         ],
     ),
     Recipe(
@@ -1488,6 +1523,14 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
 
     draw_tag(draw, (left_x, chip_y), f"{recipe.servings} portioner", chip_font, style.soft, style.ink)
     draw_tag(draw, (left_x + 240, chip_y), f"{round(kcal_per_portion)} kcal/portion", chip_font, style.soft, style.ink)
+
+    right_edge = A4_W - INNER_MARGIN
+    tag_x = right_edge
+    for extra_tag in reversed(recipe.tags):
+        w = tag_size(draw, extra_tag, chip_font)[0]
+        tag_x -= w
+        draw_tag(draw, (tag_x, chip_y), extra_tag, chip_font, style.accent, "#fffdf9")
+        tag_x -= 16
 
     column_gap = 60
     content_x = INNER_MARGIN
