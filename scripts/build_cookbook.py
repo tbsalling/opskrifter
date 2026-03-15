@@ -1561,7 +1561,12 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         width=2,
     )
 
-    draw_tag(draw, (left_x, tag_y), section_label(recipe.section), section_font, style.accent, "#fffdf9")
+    section_text = section_label(recipe.section)
+    draw_tag(draw, (left_x, tag_y), section_text, section_font, style.accent, "#fffdf9")
+    top_tag_x = left_x + tag_size(draw, section_text, section_font)[0] + 16
+    for extra_tag in recipe.tags:
+        draw_tag(draw, (top_tag_x, tag_y), extra_tag, section_font, style.soft, style.ink)
+        top_tag_x += tag_size(draw, extra_tag, section_font)[0] + 16
 
     title_y = title_start_y
     for line in title_lines:
@@ -1578,14 +1583,6 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
     for chip_text in chip_texts:
         draw_tag(draw, (chip_x, chip_y), chip_text, chip_font, style.soft, style.ink)
         chip_x += tag_size(draw, chip_text, chip_font)[0] + chip_gap
-
-    right_edge = A4_W - INNER_MARGIN
-    tag_x = right_edge
-    for extra_tag in reversed(recipe.tags):
-        w = tag_size(draw, extra_tag, chip_font)[0]
-        tag_x -= w
-        draw_tag(draw, (tag_x, chip_y), extra_tag, chip_font, style.accent, "#fffdf9")
-        tag_x -= 16
 
     column_gap = 60
     content_x = INNER_MARGIN
