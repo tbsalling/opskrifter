@@ -1531,8 +1531,16 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
         draw.text((left_x, title_y), line, font=title_font, fill=style.ink)
         title_y += fonts["title_line"]
 
-    draw_tag(draw, (left_x, chip_y), f"{recipe.servings} portioner", chip_font, style.soft, style.ink)
-    draw_tag(draw, (left_x + 240, chip_y), f"{round(kcal_per_portion)} kcal/portion", chip_font, style.soft, style.ink)
+    chip_gap = 20
+    chip_texts = [
+        f"{recipe.servings} portioner",
+        f"{round(kcal_per_portion)} kcal/portion",
+        f"{round(per_100['kcal'])} kcal/100 g",
+    ]
+    chip_x = left_x
+    for chip_text in chip_texts:
+        draw_tag(draw, (chip_x, chip_y), chip_text, chip_font, style.soft, style.ink)
+        chip_x += tag_size(draw, chip_text, chip_font)[0] + chip_gap
 
     right_edge = A4_W - INNER_MARGIN
     tag_x = right_edge
