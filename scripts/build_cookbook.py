@@ -170,6 +170,8 @@ NDB: Dict[str, Nutrient] = {
     "æblejuice": Nutrient(46, 0.1, 11, 0.1),
     "minimælk": Nutrient(37, 3.4, 4.7, 0.5),
     "flødeost_urter": Nutrient(250, 6, 3, 24),
+    "kyllingebryst": Nutrient(107, 22, 0, 2.4),
+    "kokosmælk": Nutrient(177, 1.8, 2.7, 18),
 }
 
 DISPLAY_NAMES = {
@@ -242,6 +244,8 @@ DISPLAY_NAMES = {
     "æblejuice": "Æblejuice",
     "minimælk": "Minimælk",
     "flødeost_urter": "Flødeost med hvidløg og urter",
+    "kyllingebryst": "Kyllingebryst",
+    "kokosmælk": "Kokosmælk",
 }
 
 SECTION_STYLES = {
@@ -841,6 +845,39 @@ RECIPES: List[Recipe] = [
             ("løg", 100),
             ("tomatpuré", 40),
             ("cheddar", 40),
+        ],
+    ),
+    Recipe(
+        section="Aftensmad",
+        title="One pot kylling i karry",
+        servings=2,
+        finished_weight_g=870,
+        ingredients=[
+            "450 g kyllingebryst",
+            "3 tsk karry",
+            "1/2 tsk paprika",
+            "1 spsk sukker",
+            "1/2 tsk stødt spidskommen",
+            "400 ml kokosmælk",
+            "1 hønsebouillonterning",
+            "160 g ris",
+            "Frisk persille til servering",
+            "Salt og peber",
+        ],
+        method=[
+            "Fjern eventuelle sener fra kyllingen.",
+            "Læg kyllingebrysterne hele i en gryde sammen med karry, paprika, sukker, spidskommen, kokosmælk og bouillonterning. Rør rundt.",
+            "Tilsæt risene direkte i gryden og rør rundt igen.",
+            "Sæt låget på med en lille sprække til damp, og lad retten simre ved middel varme i 30 minutter.",
+            "Tag gryden af varmen og brug to gafler til at rive kyllingen i strimler.",
+            "Sæt gryden tilbage på blusset i 5 minutter og lad det boble let op. Smag til med salt og peber.",
+            "Server med frisk persille.",
+        ],
+        nutrient_items=[
+            ("kyllingebryst", 450),
+            ("ris_tør", 160),
+            ("kokosmælk", 400),
+            ("sukker", 12),
         ],
     ),
     Recipe(

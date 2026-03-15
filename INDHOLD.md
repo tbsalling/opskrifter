@@ -19,11 +19,12 @@
 - Galetter med skinke, ost og æg (side 13)
 - Hjemmelavet lasagne (side 14)
 - Hvid fisk med spinat og mornaysauce (side 15)
-- Pastarør med østershatte og fløde (side 16)
-- Proteinrig pastaret med oksekød (side 17)
-- Spicy Mac & Cheese (side 18)
+- One pot kylling i karry (side 16)
+- Pastarør med østershatte og fløde (side 17)
+- Proteinrig pastaret med oksekød (side 18)
+- Spicy Mac & Cheese (side 19)
 ## Weekend
 
-- Aligot (side 19)
-- Langtidsstegt and (side 20)
-- Pulled pork (side 21)
+- Aligot (side 20)
+- Langtidsstegt and (side 21)
+- Pulled pork (side 22)
