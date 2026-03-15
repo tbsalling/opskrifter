@@ -307,8 +307,8 @@ RECIPES: List[Recipe] = [
             "75 g sukker",
             "1/2 tsk fint salt",
             "ca. 500 g hvedemel",
-            "Fyld: 100 g smør, 100 g brun farin, 2 spsk kanel",
-            "Evt. glasur af flormelis og lidt vand eller citronsaft",
+            "100 g smør, 100 g brun farin, 2 spsk kanel",
+            "Flormelis og lidt vand eller citronsaft, valgfrit",
         ],
         method=[
             "Rør gæren ud i den lune mælk. Tilsæt sukker, salt, æg og smeltet smør.",
@@ -422,7 +422,7 @@ RECIPES: List[Recipe] = [
             "Slå dejen ned, del den i to og form hvert stykke til et aflangt brød.",
             "Læg brødene på en bageplade med bagepapir og lad dem efterhæve i 30 minutter.",
             "Rids brødene med en skarp kniv og pensl med sammenpisket æg, mælk eller vand.",
-            "Bag ved 200 °C i 30-35 minutter, til brødene er gyldne og hule at høre på underneath.",
+            "Bag ved 200 °C i 30-35 minutter, til brødene er gyldne og hule, når man banker let på undersiden.",
             "Lad brødene køle af på rist inden udskæring.",
         ],
         nutrient_items=[
@@ -446,18 +446,18 @@ RECIPES: List[Recipe] = [
             "2 æg",
             "1 tsk vaniljepulver",
             "Kokosolie til vaffeljernet",
-            ":: Topping",
+            ":: Servering",
             "Sirup",
             "Rosiner",
             "Frisk frugt",
         ],
         method=[
             "Blend havregrynene til mel i en minihakker eller blender.",
-            "Pisk havregrynmel, plantemælk, æg og vaniljepulver godt sammen til en ensartet dej.",
+            "Pisk havregrynsmel, plantemælk, æg og vaniljepulver godt sammen til en ensartet dej.",
             "Varm vaffeljernet op til niveau 6 (eller højt). Smør begge sider med kokosolie og luk jernet. Vent til det er gennemvarmt.",
             "Hæld dej på jernet — ca. halvdelen ad gangen — og bag vaflerne i 3-4 minutter, til de er gyldne og sprøde.",
             "Gentag med den resterende dej.",
-            "Server straks med topping efter smag, fx sirup, rosiner eller frisk frugt.",
+            "Server straks med valgfri topping, fx sirup, rosiner eller frisk frugt.",
         ],
         nutrient_items=[
             ("havregryn", 150),
@@ -526,10 +526,10 @@ RECIPES: List[Recipe] = [
             "3 dl mælk",
             "1/2 tsk fint salt",
             "4 tsk smør til stegning",
-            "Skinkefyld: 4 skiver cheddar eller mozzarella",
+            "4 skiver cheddar eller mozzarella",
             "8 skiver parmaskinke",
             "4 æg",
-            "Til servering: 50 g frisk spinat",
+            "50 g frisk spinat",
         ],
         method=[
             "Pisk boghvedemel, æg, mælk og salt sammen til en glat dej uden klumper.",
@@ -601,23 +601,31 @@ RECIPES: List[Recipe] = [
         servings=4,
         finished_weight_g=1800,
         ingredients=[
+            ":: Kødboller",
             "400 g hakket kylling eller svinekød",
             "1 løg, finthakket",
             "1 æg",
             "1 dl mælk",
             "3 spsk havregryn",
             "Salt og peber",
-            "Sauce: 2 spsk olie, 2 spsk karry, 1 løg",
-            "2 gulerødder, 1 æble, 1-2 fed hvidløg",
+            ":: Sauce og tilbehør",
+            "2 spsk olie",
+            "2 spsk karry",
+            "1 løg",
+            "2 gulerødder",
+            "1 æble",
+            "1-2 fed hvidløg",
             "1-2 spsk hvedemel",
             "6 dl bouillon",
             "1 dl mælk eller fløde",
             "280 g ris, tørvægt",
         ],
         method=[
+            ":: Kødboller",
             "Rør farsen sammen med finthakket løg, æg, mælk, havregryn, salt og peber. Lad farsen hvile 15 minutter.",
             "Form farsen til boller med en ske, og kog dem i letsaltet vand i 8-10 minutter. Gem kogevandet til saucen.",
-            "Svits løg, gulerod, æble og hvidløg i olie et par minutter. Tilsæt karry, og lad den kort stege med.",
+            ":: Sauce og servering",
+            "Svits løg, gulerødder, æble og hvidløg i olie et par minutter. Tilsæt karry, og lad den kort stege med.",
             "Rør hvedemelet i, og spæd gradvist med bouillon, til saucen er glat.",
             "Lad saucen simre, til grøntsagerne er helt møre, og blend den derefter glat.",
             "Tilsæt mælk eller fløde, smag til, og læg kødbollerne tilbage i saucen.",
@@ -1142,9 +1150,11 @@ def recipe_component_entries(recipe: Recipe) -> Tuple[List[str], List[str]]:
     rules = COMPONENT_RULES.get(recipe.title)
     if not rules:
         return recipe.ingredients, recipe.method
+    ingredient_entries = recipe.ingredients if any(is_component_entry(item) for item in recipe.ingredients) else componentize_entries(recipe.ingredients, rules["ingredients"])
+    method_entries = recipe.method if any(is_component_entry(item) for item in recipe.method) else componentize_entries(recipe.method, rules["method"])
     return (
-        componentize_entries(recipe.ingredients, rules["ingredients"]),
-        componentize_entries(recipe.method, rules["method"]),
+        ingredient_entries,
+        method_entries,
     )
 
 

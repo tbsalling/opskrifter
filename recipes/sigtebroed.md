@@ -21,7 +21,7 @@
 5. Slå dejen ned, del den i to og form hvert stykke til et aflangt brød.
 6. Læg brødene på en bageplade med bagepapir og lad dem efterhæve i 30 minutter.
 7. Rids brødene med en skarp kniv og pensl med sammenpisket æg, mælk eller vand.
-8. Bag ved 200 °C i 30-35 minutter, til brødene er gyldne og hule at høre på underneath.
+8. Bag ved 200 °C i 30-35 minutter, til brødene er gyldne og hule, når man banker let på undersiden.
 9. Lad brødene køle af på rist inden udskæring.
 
 ## Næringsestimat

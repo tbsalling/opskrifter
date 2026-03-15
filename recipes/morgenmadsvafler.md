@@ -12,18 +12,18 @@
 - 1 tsk vaniljepulver
 - Kokosolie til vaffeljernet
 
-### Topping
+### Servering
 - Sirup
 - Rosiner
 - Frisk frugt
 
 ## Fremgangsmåde
 1. Blend havregrynene til mel i en minihakker eller blender.
-2. Pisk havregrynmel, plantemælk, æg og vaniljepulver godt sammen til en ensartet dej.
+2. Pisk havregrynsmel, plantemælk, æg og vaniljepulver godt sammen til en ensartet dej.
 3. Varm vaffeljernet op til niveau 6 (eller højt). Smør begge sider med kokosolie og luk jernet. Vent til det er gennemvarmt.
 4. Hæld dej på jernet — ca. halvdelen ad gangen — og bag vaflerne i 3-4 minutter, til de er gyldne og sprøde.
 5. Gentag med den resterende dej.
-6. Server straks med topping efter smag, fx sirup, rosiner eller frisk frugt.
+6. Server straks med valgfri topping, fx sirup, rosiner eller frisk frugt.
 
 ## Næringsestimat
 - Energi pr. 100 g: 177 kcal

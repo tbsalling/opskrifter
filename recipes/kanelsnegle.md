@@ -15,10 +15,10 @@
 - ca. 500 g hvedemel
 
 ### Fyld
-- Fyld: 100 g smør, 100 g brun farin, 2 spsk kanel
+- 100 g smør, 100 g brun farin, 2 spsk kanel
 
 ### Glasur
-- Evt. glasur af flormelis og lidt vand eller citronsaft
+- Flormelis og lidt vand eller citronsaft, valgfrit
 
 ## Fremgangsmåde
 
