@@ -26,8 +26,9 @@
 - Pastarør med østershatte og fløde (side 20)
 - Proteinrig pastaret med oksekød (side 21)
 - Spicy Mac & Cheese (side 22)
+- Stroganoff (okse) (side 23)
 ## Weekend
 
-- Aligot (side 23)
-- Langtidsstegt and (side 24)
-- Pulled pork (side 25)
+- Aligot (side 24)
+- Langtidsstegt and (side 25)
+- Pulled pork (side 26)
