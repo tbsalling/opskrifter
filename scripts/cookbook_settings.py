@@ -16,8 +16,8 @@ PDF_SCALE = 72 / 300
 PDF_W, PDF_H = A4_W * PDF_SCALE, A4_H * PDF_SCALE
 OUTER_MARGIN = 90
 INNER_MARGIN = 120
-TITLE = "Vores opskrifter"
-SUBTITLE = "Mad fra Solsidens køkken"
+TITLE = "Mad fra Solsiden"
+SUBTITLE = "Familiens kogebog"
 
 MONTH_NAMES = {
     1: "januar",

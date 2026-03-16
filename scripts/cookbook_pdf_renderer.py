@@ -780,10 +780,65 @@ def draw_cover(version: int, build_date_text: str) -> Image.Image:
     panel.paste(fitted, (28, 28))
     draw = ImageDraw.Draw(panel)
     draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=42, outline="#efe5d9", width=4)
+
+    tone_overlay = Image.new("RGBA", panel.size, (0, 0, 0, 0))
+    tone_draw = ImageDraw.Draw(tone_overlay)
+    fade_end = int(A4_H * 0.42)
+    for y in range(28, A4_H - 28):
+        if y <= fade_end:
+            ratio = (y - 28) / max(fade_end - 28, 1)
+            alpha = int(132 - 72 * ratio)
+        else:
+            ratio = (y - fade_end) / max((A4_H - 28) - fade_end, 1)
+            alpha = int(max(0, 32 - 32 * ratio))
+        tone_draw.line([(28, y), (A4_W - 28, y)], fill=(18, 12, 10, alpha), width=1)
+    blurred_ellipse(
+        tone_overlay,
+        [300, 40, A4_W - 300, 980],
+        (0, 0, 0, 84),
+        70,
+    )
+    blurred_ellipse(
+        tone_overlay,
+        [80, A4_H - 560, A4_W - 80, A4_H + 180],
+        (0, 0, 0, 40),
+        90,
+    )
+    panel = Image.alpha_composite(panel.convert("RGBA"), tone_overlay).convert("RGB")
+    draw = ImageDraw.Draw(panel)
+
+    title_font = load_font(134, "display")
+    subtitle_font = load_font(50, "sans-bold")
+    title_box_width = A4_W - 300
+    title_left = (A4_W - title_box_width) // 2
+    title_top = 200
+    title_width = title_box_width - 80
+    title_lines = wrap_text(draw, TITLE, title_font, title_width)
+    title_line_height = line_height(134, 1.0)
+    subtitle_bbox = draw.textbbox((0, 0), SUBTITLE, font=subtitle_font)
+    subtitle_width = subtitle_bbox[2] - subtitle_bbox[0]
+    subtitle_height = subtitle_bbox[3] - subtitle_bbox[1]
+    title_height = len(title_lines) * title_line_height
+    subtitle_y = title_top + 30 + title_height + 18
+    title_y = title_top + 30
+    for line in title_lines:
+        line_bbox = draw.textbbox((0, 0), line, font=title_font)
+        line_width = line_bbox[2] - line_bbox[0]
+        line_x = title_left + (title_box_width - line_width) // 2
+        draw.text((line_x + 4, title_y + 6), line, font=title_font, fill=(0, 0, 0))
+        draw.text((line_x, title_y), line, font=title_font, fill="#fff9f2")
+        title_y += title_line_height
+    subtitle_x = title_left + (title_box_width - subtitle_width) // 2
+    draw.text((subtitle_x + 3, subtitle_y + 4), SUBTITLE, font=subtitle_font, fill=(0, 0, 0))
+    draw.text((subtitle_x, subtitle_y), SUBTITLE, font=subtitle_font, fill="#efe2d3")
+    rule_y = subtitle_y + subtitle_height + 44
+    rule_left = (A4_W - 520) // 2
+    rule_right = rule_left + 520
+    draw.line([rule_left, rule_y, rule_right, rule_y], fill="#efe2d3", width=4)
     return panel
 
 
-def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Image:
+def draw_contents(ordered: List[Recipe], page_map: Dict[str, int], version: int, build_date_text: str) -> Image.Image:
     panel = Image.new("RGB", (A4_W, A4_H), "#fcfaf7")
     draw = ImageDraw.Draw(panel)
     draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#ddd3c8", width=3, fill="#fffdf9")
@@ -797,6 +852,10 @@ def draw_contents(ordered: List[Recipe], page_map: Dict[str, int]) -> Image.Imag
 
     draw.text((INNER_MARGIN, 140), "Indhold", font=title_font, fill="#2b241f")
     draw.text((INNER_MARGIN, 260), "Opskrifter", font=small_font, fill="#756a5f")
+    meta_text = f"Version {version} · {build_date_text}"
+    meta_bbox = draw.textbbox((0, 0), meta_text, font=small_font)
+    meta_x = A4_W - INNER_MARGIN - (meta_bbox[2] - meta_bbox[0])
+    draw.text((meta_x, 262), meta_text, font=small_font, fill="#8b7f73")
 
     y = 380
     current_section = None
@@ -924,13 +983,16 @@ def draw_cover_pdf(canvas, version: int, build_date_text: str, fonts: Dict[str, 
     canvas.drawImage(ImageReader(cover_buffer), 0, 0, width=PDF_W, height=PDF_H, preserveAspectRatio=False, mask="auto")
 
 
-def draw_contents_pdf(canvas, ordered: List[Recipe], page_map: Dict[str, int], fonts: Dict[str, str]) -> None:
+def draw_contents_pdf(canvas, ordered: List[Recipe], page_map: Dict[str, int], version: int, build_date_text: str, fonts: Dict[str, str]) -> None:
     pdf_round_rect(canvas, 28, 28, A4_W - 56, A4_H - 56, 34, "#fffdf9", "#ddd3c8", 3)
     row_height = line_height(RECIPE_BODY_SIZE, 1.18)
     separator_y = int(row_height * 0.82)
 
     pdf_draw_text(canvas, INNER_MARGIN, 140, "Indhold", fonts["display"], 96, "#2b241f")
     pdf_draw_text(canvas, INNER_MARGIN, 260, "Opskrifter", fonts["sans"], 30, "#756a5f")
+    meta_text = f"Version {version} · {build_date_text}"
+    meta_x = A4_W - INNER_MARGIN - int(round(pdf_text_width(meta_text, fonts["sans"], 30)))
+    pdf_draw_text(canvas, meta_x, 260, meta_text, fonts["sans"], 30, "#8b7f73")
 
     y = 380
     current_section = None
@@ -1208,7 +1270,7 @@ def build_pdf_vector(
     draw_cover_pdf(canvas, build_version, build_date_text, fonts)
     canvas.showPage()
 
-    draw_contents_pdf(canvas, ordered, page_map, fonts)
+    draw_contents_pdf(canvas, ordered, page_map, build_version, build_date_text, fonts)
     canvas.showPage()
 
     for recipe in ordered:
