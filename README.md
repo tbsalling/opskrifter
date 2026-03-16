@@ -24,7 +24,7 @@ Repoet er organiseret sådan:
 Krav:
 
 - `python3`
-- Python-biblioteket `Pillow`
+- Python-bibliotekerne `Pillow` og `reportlab`
 
 Kør generatoren fra repo-roden:
 
@@ -40,10 +40,10 @@ Når kommandoen er kørt:
 
 ## Installér afhængighed
 
-Hvis `Pillow` ikke allerede er installeret, kan det installeres sådan:
+Hvis afhængighederne ikke allerede er installeret, kan de installeres sådan:
 
 ```bash
-python3 -m pip install Pillow
+python3 -m pip install Pillow reportlab
 ```
 
 ## Arbejdsgang
