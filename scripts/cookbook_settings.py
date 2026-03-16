@@ -9,6 +9,7 @@ OUTPUT_DIR = ROOT / "output"
 PDF_PATH = OUTPUT_DIR / "kogebog.pdf"
 DATA_DIR = ROOT / "data"
 VERSION_FILE = DATA_DIR / "book_version.txt"
+COVER_IMAGE_PATH = DATA_DIR / "forside.png"
 
 A4_W, A4_H = 2480, 3508
 PDF_SCALE = 72 / 300

@@ -1,17 +1,20 @@
 from __future__ import annotations
 
+import io
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from PIL import Image, ImageDraw, ImageFilter, ImageFont
+from PIL import Image, ImageDraw, ImageFilter, ImageFont, ImageOps
 
 try:
     from reportlab.lib.colors import HexColor
+    from reportlab.lib.utils import ImageReader
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
     from reportlab.pdfgen import canvas as pdf_canvas
 except ImportError:
     HexColor = None
+    ImageReader = None
     pdfmetrics = None
     TTFont = None
     pdf_canvas = None
@@ -23,6 +26,7 @@ from cookbook_settings import (
     A4_W,
     COMPONENT_BOTTOM_GAP,
     COMPONENT_TOP_GAP,
+    COVER_IMAGE_PATH,
     INNER_MARGIN,
     OUTER_MARGIN,
     PDF_H,
@@ -381,82 +385,166 @@ def blurred_roundrect(overlay: Image.Image, bbox: List[int], radius: int, fill, 
     overlay.alpha_composite(shadow)
 
 
+def draw_salad_bowl(overlay: Image.Image, cx: int, cy: int, width: int, height: int) -> None:
+    draw = ImageDraw.Draw(overlay)
+    blurred_ellipse(overlay, [cx - width // 2 + 18, cy - height // 2 + 36, cx + width // 2 + 18, cy + height // 2 + 40], (0, 0, 0, 74), 28)
+    bowl = [cx - width // 2, cy - height // 2, cx + width // 2, cy + height // 2]
+    draw.ellipse(bowl, fill="#f5f0ea", outline="#d9cec3", width=5)
+    fill = [bowl[0] + 26, bowl[1] + 32, bowl[2] - 26, bowl[3] - 20]
+    draw.ellipse(fill, fill="#d8e3d0")
+    greens = [
+        [fill[0] + 40, fill[1] + 26, fill[0] + 170, fill[1] + 120],
+        [fill[0] + 130, fill[1] + 58, fill[0] + 270, fill[1] + 156],
+        [fill[0] + 250, fill[1] + 24, fill[0] + 410, fill[1] + 140],
+        [fill[0] + 330, fill[1] + 68, fill[0] + 470, fill[1] + 170],
+    ]
+    for leaf in greens:
+        draw.ellipse(leaf, fill="#6f9160", outline="#527246", width=3)
+        mid_y = (leaf[1] + leaf[3]) // 2
+        draw.line([leaf[0] + 16, mid_y, leaf[2] - 16, mid_y], fill="#cfe0c5", width=2)
+    for tomato in [(fill[0] + 145, fill[1] + 84, 32), (fill[0] + 300, fill[1] + 90, 28), (fill[0] + 390, fill[1] + 122, 24)]:
+        tx, ty, radius = tomato
+        draw.ellipse([tx - radius, ty - radius, tx + radius, ty + radius], fill="#d65a44", outline="#a83e30", width=3)
+        draw.ellipse([tx - radius + 10, ty - radius + 10, tx - 2, ty - 8], fill="#ec9b88")
+    draw.arc([bowl[0] + 26, bowl[1] + 26, bowl[2] - 26, bowl[3] - 26], start=205, end=330, fill="#ffffff", width=6)
+
+
+def draw_pasta_plate(overlay: Image.Image, cx: int, cy: int, width: int, height: int) -> None:
+    draw = ImageDraw.Draw(overlay)
+    blurred_ellipse(overlay, [cx - width // 2 + 26, cy - height // 2 + 44, cx + width // 2 + 26, cy + height // 2 + 52], (0, 0, 0, 86), 34)
+    plate = [cx - width // 2, cy - height // 2, cx + width // 2, cy + height // 2]
+    draw.ellipse(plate, fill="#fbf7f1", outline="#ded2c6", width=6)
+    draw.ellipse([plate[0] + 26, plate[1] + 24, plate[2] - 26, plate[3] - 24], fill="#eee5da")
+    food = [plate[0] + 92, plate[1] + 86, plate[2] - 92, plate[3] - 72]
+    draw.ellipse(food, fill="#d86a43")
+    noodle_colors = ["#f0c36d", "#e8b45c", "#f5cf82"]
+    noodle_arcs = [
+        ([food[0] + 28, food[1] + 26, food[0] + 200, food[1] + 164], 205, 10, 20),
+        ([food[0] + 140, food[1] + 16, food[0] + 348, food[1] + 178], 170, 350, 22),
+        ([food[0] + 280, food[1] + 20, food[0] + 500, food[1] + 186], 185, 20, 22),
+        ([food[0] + 54, food[1] + 108, food[0] + 260, food[1] + 248], 160, 350, 18),
+        ([food[0] + 226, food[1] + 92, food[0] + 452, food[1] + 250], 200, 25, 20),
+        ([food[0] + 120, food[1] + 150, food[0] + 362, food[1] + 292], 185, 18, 20),
+    ]
+    for index, (bbox, start, end, width_px) in enumerate(noodle_arcs):
+        draw.arc(bbox, start=start, end=end, fill=noodle_colors[index % len(noodle_colors)], width=width_px)
+    for bx, by, radius in [(food[0] + 124, food[1] + 118, 30), (food[0] + 230, food[1] + 58, 34), (food[0] + 378, food[1] + 126, 30)]:
+        draw.ellipse([bx - radius, by - radius, bx + radius, by + radius], fill="#f3dcc1")
+        draw.ellipse([bx - radius + 10, by - radius + 10, bx + radius - 10, by + radius - 8], fill="#fff4e7")
+    for herb in [
+        [food[0] + 124, food[1] + 42, food[0] + 204, food[1] + 102],
+        [food[0] + 352, food[1] + 72, food[0] + 432, food[1] + 132],
+        [food[0] + 236, food[1] + 150, food[0] + 316, food[1] + 214],
+    ]:
+        draw.ellipse(herb, fill="#5f8353", outline="#49653f", width=2)
+        mid_y = (herb[1] + herb[3]) // 2
+        draw.line([herb[0] + 12, mid_y, herb[2] - 12, mid_y], fill="#dcead4", width=2)
+    chili = [food[0] + 430, food[1] + 26, food[0] + 492, food[1] + 74]
+    draw.arc(chili, start=170, end=350, fill="#a2271b", width=10)
+    draw.arc([plate[0] + 40, plate[1] + 32, plate[2] - 40, plate[3] - 34], start=210, end=330, fill="#ffffff", width=8)
+
+
+def draw_stew_bowl(overlay: Image.Image, cx: int, cy: int, width: int, height: int) -> None:
+    draw = ImageDraw.Draw(overlay)
+    blurred_ellipse(overlay, [cx - width // 2 + 22, cy - height // 2 + 30, cx + width // 2 + 22, cy + height // 2 + 38], (0, 0, 0, 74), 28)
+    bowl = [cx - width // 2, cy - height // 2, cx + width // 2, cy + height // 2]
+    draw.ellipse(bowl, fill="#f3ede6", outline="#d7cbc0", width=5)
+    fill = [bowl[0] + 26, bowl[1] + 28, bowl[2] - 26, bowl[3] - 26]
+    draw.ellipse(fill, fill="#ba6b43")
+    chunks = [
+        ([fill[0] + 44, fill[1] + 58, fill[0] + 128, fill[1] + 134], "#8c563a"),
+        ([fill[0] + 122, fill[1] + 78, fill[0] + 218, fill[1] + 154], "#744731"),
+        ([fill[0] + 210, fill[1] + 54, fill[0] + 306, fill[1] + 132], "#8e5e3c"),
+        ([fill[0] + 308, fill[1] + 80, fill[0] + 384, fill[1] + 150], "#775241"),
+    ]
+    for bbox, color in chunks:
+        draw.rounded_rectangle(bbox, radius=18, fill=color)
+    draw.arc([fill[0] + 56, fill[1] + 20, fill[2] - 40, fill[3] - 46], start=180, end=330, fill="#f2d3b6", width=10)
+    for herb in [(fill[0] + 110, fill[1] + 30), (fill[0] + 300, fill[1] + 50), (fill[0] + 210, fill[1] + 118)]:
+        hx, hy = herb
+        draw.ellipse([hx - 20, hy - 12, hx + 20, hy + 12], fill="#648554")
+        draw.ellipse([hx - 10, hy - 20, hx + 30, hy + 4], fill="#6f9160")
+    draw.arc([bowl[0] + 28, bowl[1] + 26, bowl[2] - 28, bowl[3] - 32], start=210, end=335, fill="#ffffff", width=6)
+
+
+def draw_bread_board(overlay: Image.Image, x: int, y: int, width: int, height: int) -> None:
+    draw = ImageDraw.Draw(overlay)
+    blurred_roundrect(overlay, [x + 18, y + 22, x + width + 18, y + height + 22], 44, (0, 0, 0, 78), 26)
+    draw.rounded_rectangle([x, y, x + width, y + height], radius=44, fill="#8f664d", outline="#6f4d39", width=4)
+    draw.rounded_rectangle([x + 54, y + 56, x + width - 54, y + height - 54], radius=28, outline="#ad8266", width=4)
+    slices = [
+        [x + 96, y + 90, x + 244, y + 228],
+        [x + 208, y + 108, x + 364, y + 252],
+        [x + 328, y + 124, x + 478, y + 262],
+    ]
+    for index, slice_box in enumerate(slices):
+        dx = index * 4
+        blurred_roundrect(overlay, [slice_box[0] + 10, slice_box[1] + 12, slice_box[2] + 10, slice_box[3] + 12], 24, (0, 0, 0, 42), 12)
+        draw.rounded_rectangle([slice_box[0] + dx, slice_box[1], slice_box[2] + dx, slice_box[3]], radius=24, fill="#efd0a0", outline="#b87d48", width=4)
+        draw.rounded_rectangle([slice_box[0] + 26 + dx, slice_box[1] + 26, slice_box[2] - 24 + dx, slice_box[3] - 22], radius=16, fill="#f7e4c2")
+    draw.rounded_rectangle([x + 276, y + 162, x + 364, y + 222], radius=16, fill="#f3d872", outline="#d5b958", width=3)
+    draw.arc([x + 42, y + 32, x + width - 42, y + height - 26], start=210, end=320, fill="#c79c79", width=6)
+
+
+def draw_cover_cutlery(overlay: Image.Image, x: int, y: int, length: int) -> None:
+    draw = ImageDraw.Draw(overlay)
+    draw.line([x, y, x + length, y + 68], fill="#cdc7c2", width=18)
+    draw.line([x + 32, y + 12, x + length + 32, y + 80], fill="#f3f0ec", width=7)
+    draw.ellipse([x - 54, y - 36, x + 34, y + 48], fill="#ddd7d1", outline="#bdb5ae", width=3)
+    for tine_offset in [0, 16, 32, 48]:
+        draw.line([x + length - 12 + tine_offset, y + 44, x + length - 2 + tine_offset, y - 18], fill="#e9e5df", width=5)
+
+
 def draw_cover_illustration(base: Image.Image) -> None:
     overlay = Image.new("RGBA", base.size, (0, 0, 0, 0))
     draw = ImageDraw.Draw(overlay)
 
-    art_box = [130, 1000, A4_W - 130, A4_H - 250]
-    blurred_roundrect(overlay, [art_box[0] + 12, art_box[1] + 18, art_box[2] + 12, art_box[3] + 18], 48, (60, 36, 22, 45), 22)
-    draw.rounded_rectangle(art_box, radius=48, fill="#efe1d0", outline="#dac4ae", width=3)
-
+    art_box = [70, 70, A4_W - 70, A4_H - 70]
+    blurred_roundrect(overlay, [art_box[0] + 16, art_box[1] + 20, art_box[2] + 16, art_box[3] + 20], 62, (0, 0, 0, 80), 30)
     art_w = art_box[2] - art_box[0]
     art_h = art_box[3] - art_box[1]
-    art_bg = vertical_gradient(art_w, art_h, "#f6ede2", "#e7cfb8")
+    art_bg = vertical_gradient(art_w, art_h, "#6e4a39", "#241915")
     overlay.paste(art_bg.convert("RGBA"), (art_box[0], art_box[1]))
-    draw.rounded_rectangle(art_box, radius=48, outline="#d5b99d", width=3)
+    draw.rounded_rectangle(art_box, radius=62, outline="#cdb39f", width=3)
 
-    table_top = art_box[1] + art_h * 0.66
-    draw.rectangle([art_box[0], int(table_top), art_box[2], art_box[3]], fill="#7a543d")
-    draw.rectangle([art_box[0], int(table_top + 48), art_box[2], art_box[3]], fill="#654533")
+    vignette_top = Image.new("RGBA", base.size, (0, 0, 0, 0))
+    vignette_draw = ImageDraw.Draw(vignette_top)
+    vignette_draw.ellipse([art_box[0] - 180, art_box[1] - 260, art_box[2] + 180, art_box[1] + 760], fill=(255, 214, 170, 30))
+    vignette_draw.ellipse([art_box[0] - 120, art_box[1] + 740, art_box[2] + 180, art_box[3] + 240], fill=(0, 0, 0, 80))
+    vignette_top = vignette_top.filter(ImageFilter.GaussianBlur(80))
+    overlay.alpha_composite(vignette_top)
+
+    table_top = art_box[1] + int(art_h * 0.54)
+    draw.rectangle([art_box[0], table_top, art_box[2], art_box[3]], fill="#6b4735")
+    for offset in range(0, art_w, 180):
+        draw.line([art_box[0] + offset, table_top + 18, art_box[0] + offset + 160, art_box[3]], fill="#5b3c2e", width=10)
+        draw.line([art_box[0] + offset + 80, table_top + 8, art_box[0] + offset + 210, art_box[3]], fill="#7b5640", width=6)
 
     cloth = [
-        (art_box[0] + 120, int(table_top) - 20),
-        (art_box[0] + 430, int(table_top) - 40),
-        (art_box[0] + 610, art_box[3] - 60),
-        (art_box[0] + 250, art_box[3] - 20),
+        (art_box[0] + 160, table_top - 20),
+        (art_box[0] + 720, table_top + 10),
+        (art_box[0] + 1120, art_box[3] - 60),
+        (art_box[0] + 540, art_box[3] - 10),
+        (art_box[0] + 120, art_box[3] - 180),
     ]
-    draw.polygon(cloth, fill="#d4ddd8")
-    draw.line([cloth[0], cloth[2][0] - 70, cloth[2][1] - 30], fill="#b8c4be", width=4)
-    draw.line([cloth[1], cloth[2][0] - 140, cloth[2][1] - 120], fill="#b8c4be", width=4)
+    draw.polygon(cloth, fill="#d7dbd4")
+    draw.line([cloth[0], cloth[2]], fill="#bcc4bd", width=5)
+    draw.line([cloth[1], cloth[4]], fill="#bcc4bd", width=4)
+    draw.line([art_box[0] + 238, table_top + 86, art_box[0] + 902, art_box[3] - 92], fill="#eef2ec", width=10)
 
-    blurred_ellipse(overlay, [art_box[0] + 340, int(table_top) - 10, art_box[0] + 1040, int(table_top) + 180], (40, 20, 12, 70), 28)
-    draw.ellipse([art_box[0] + 380, int(table_top) - 80, art_box[0] + 1000, int(table_top) + 120], fill="#f9f4ed", outline="#d8cdc1", width=4)
-    draw.ellipse([art_box[0] + 440, int(table_top) - 20, art_box[0] + 940, int(table_top) + 90], fill="#efe5d8")
+    draw_salad_bowl(overlay, art_box[0] + 520, table_top + 150, 620, 310)
+    draw_stew_bowl(overlay, art_box[2] - 410, art_box[1] + 960, 700, 360)
+    draw_pasta_plate(overlay, art_box[0] + 1120, table_top + 120, 980, 470)
+    draw_bread_board(overlay, art_box[2] - 700, art_box[3] - 520, 640, 350)
+    draw_cover_cutlery(overlay, art_box[0] + 360, art_box[3] - 470, 420)
 
-    tomato_centers = [
-        (art_box[0] + 560, int(table_top) - 70, 96),
-        (art_box[0] + 690, int(table_top) - 40, 84),
-        (art_box[0] + 810, int(table_top) - 72, 92),
-        (art_box[0] + 770, int(table_top) + 20, 78),
-        (art_box[0] + 620, int(table_top) + 18, 74),
-    ]
-    for cx, cy, r in tomato_centers:
-        blurred_ellipse(overlay, [cx - r + 10, cy - r + 18, cx + r + 10, cy + r + 18], (64, 22, 16, 54), 14)
-        draw.ellipse([cx - r, cy - r, cx + r, cy + r], fill="#c84d3a", outline="#9c3326", width=3)
-        draw.ellipse([cx - r + 22, cy - r + 18, cx - 4, cy - 8], fill="#e38773")
-        draw.polygon(
-            [(cx, cy - r - 8), (cx + 16, cy - r + 16), (cx, cy - r + 8), (cx - 16, cy - r + 16)],
-            fill="#517649",
-        )
-
-    leaves = [
-        [art_box[0] + 880, int(table_top) - 10, art_box[0] + 1010, int(table_top) + 90],
-        [art_box[0] + 930, int(table_top) + 20, art_box[0] + 1060, int(table_top) + 120],
-        [art_box[0] + 510, int(table_top) + 40, art_box[0] + 650, int(table_top) + 150],
-        [art_box[0] + 420, int(table_top) - 10, art_box[0] + 560, int(table_top) + 90],
-    ]
-    for bbox in leaves:
-        draw.ellipse(bbox, fill="#5b7f54", outline="#456540", width=2)
-        draw.line([bbox[0] + 22, (bbox[1] + bbox[3]) // 2, bbox[2] - 22, (bbox[1] + bbox[3]) // 2], fill="#dbe7d1", width=2)
-
-    bread = [art_box[0] + 1040, int(table_top) - 10, art_box[0] + 1390, int(table_top) + 210]
-    blurred_ellipse(overlay, [bread[0] + 10, bread[1] + 20, bread[2] + 20, bread[3] + 28], (30, 18, 10, 48), 18)
-    draw.rounded_rectangle(bread, radius=90, fill="#bf8754", outline="#8d6039", width=4)
-    draw.arc([bread[0] + 60, bread[1] + 30, bread[0] + 180, bread[3] - 30], start=300, end=70, fill="#f1d3a4", width=8)
-    draw.arc([bread[0] + 150, bread[1] + 26, bread[0] + 270, bread[3] - 34], start=300, end=70, fill="#f1d3a4", width=8)
-    draw.arc([bread[0] + 240, bread[1] + 32, bread[0] + 340, bread[3] - 36], start=300, end=70, fill="#f1d3a4", width=8)
-
-    for gx, gy in [(art_box[0] + 1060, int(table_top) + 180), (art_box[0] + 1130, int(table_top) + 210)]:
-        blurred_ellipse(overlay, [gx + 10, gy + 16, gx + 126, gy + 126], (40, 24, 16, 44), 12)
-        draw.ellipse([gx, gy, gx + 116, gy + 116], fill="#f3ece3", outline="#d7c8b8", width=3)
-        draw.arc([gx + 14, gy + 34, gx + 60, gy + 104], start=270, end=70, fill="#dccdbf", width=3)
-        draw.arc([gx + 54, gy + 22, gx + 104, gy + 92], start=250, end=60, fill="#dccdbf", width=3)
-
-    spoon_handle = [art_box[0] + 300, int(table_top) + 180, art_box[0] + 760, art_box[3] - 70]
-    draw.line([spoon_handle[0], spoon_handle[1], spoon_handle[2], spoon_handle[3]], fill="#a9774f", width=24)
-    draw.line([spoon_handle[0], spoon_handle[1], spoon_handle[2], spoon_handle[3]], fill="#c69467", width=14)
-    draw.ellipse([art_box[0] + 210, int(table_top) + 110, art_box[0] + 360, int(table_top) + 280], fill="#b78359", outline="#8d6039", width=4)
-    draw.ellipse([art_box[0] + 235, int(table_top) + 135, art_box[0] + 335, int(table_top) + 245], fill="#7d5034")
+    for herb in [(art_box[2] - 820, table_top + 350), (art_box[2] - 760, table_top + 390), (art_box[0] + 980, art_box[3] - 270)]:
+        hx, hy = herb
+        draw.ellipse([hx - 24, hy - 12, hx + 24, hy + 12], fill="#6f8f5d")
+        draw.ellipse([hx - 8, hy - 26, hx + 26, hy + 6], fill="#5f8353")
+    for flake in [(art_box[0] + 1240, table_top + 70), (art_box[0] + 1310, table_top + 128), (art_box[0] + 1180, table_top + 182)]:
+        fx, fy = flake
+        draw.ellipse([fx - 10, fy - 6, fx + 10, fy + 6], fill="#f4ddbe")
 
     merged = Image.alpha_composite(base.convert("RGBA"), overlay)
     base.paste(merged.convert("RGB"))
@@ -686,32 +774,12 @@ def draw_recipe_page(recipe: Recipe, per_100: dict, kcal_per_portion: float, mac
 
 
 def draw_cover(version: int, build_date_text: str) -> Image.Image:
-    panel = vertical_gradient(A4_W, A4_H, "#f7f0e5", "#eadbc8")
+    photo = Image.open(COVER_IMAGE_PATH).convert("RGB")
+    fitted = ImageOps.fit(photo, (A4_W - 56, A4_H - 56), method=Image.Resampling.LANCZOS, centering=(0.5, 0.5))
+    panel = Image.new("RGB", (A4_W, A4_H), "#f7f2ea")
+    panel.paste(fitted, (28, 28))
     draw = ImageDraw.Draw(panel)
-    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=34, outline="#d7c2ad", width=3, fill="#fbf7f1")
-    draw.rounded_rectangle([84, 84, A4_W - 84, A4_H - 84], radius=42, outline="#cdb094", width=2)
-    draw.ellipse([A4_W - 620, 120, A4_W - 110, 630], outline="#e3d0be", width=4)
-    draw.ellipse([A4_W - 540, 190, A4_W - 20, 710], outline="#efe4d8", width=2)
-
-    title_font = load_font(128, "display")
-    subtitle_font = load_font(52, "sans")
-    strap_font = load_font(36, "sans")
-    meta_font = load_font(30, "sans-bold")
-
-    title_y = 320
-    for line in wrap_text(draw, TITLE, title_font, A4_W - 2 * 160):
-        draw.text((160, title_y), line, font=title_font, fill="#2f251d")
-        title_y += line_height(title_font.size, 1.02)
-
-    draw.text((160, title_y + 12), SUBTITLE, font=subtitle_font, fill="#6c5543")
-    draw.text((160, title_y + 80), "Et hæfte med familiens retter og bagværk", font=strap_font, fill="#8b725f")
-    draw.rounded_rectangle([160, title_y + 150, 720, title_y + 210], radius=18, fill="#ead9c7")
-    draw.rounded_rectangle([760, title_y + 150, 1320, title_y + 210], radius=18, fill="#ead9c7")
-    draw.text((184, title_y + 163), f"Version {version}", font=meta_font, fill="#5e4939")
-    draw.text((784, title_y + 163), build_date_text, font=meta_font, fill="#5e4939")
-
-    draw_cover_illustration(panel)
-
+    draw.rounded_rectangle([28, 28, A4_W - 28, A4_H - 28], radius=42, outline="#efe5d9", width=4)
     return panel
 
 
@@ -848,32 +916,12 @@ def pdf_draw_pattern(canvas, style: SectionStyle) -> None:
 
 
 def draw_cover_pdf(canvas, version: int, build_date_text: str, fonts: Dict[str, str]) -> None:
-    pdf_round_rect(canvas, 0, 0, A4_W, A4_H, 0, "#f7f0e5")
-    pdf_round_rect(canvas, 28, 28, A4_W - 56, A4_H - 56, 34, "#fbf7f1", "#d7c2ad", 3)
-    pdf_round_rect(canvas, 84, 84, A4_W - 168, A4_H - 168, 42, "#fbf7f1", "#cdb094", 2)
-    pdf_ellipse(canvas, A4_W - 620, 120, A4_W - 110, 630, stroke="#e3d0be", stroke_width=4)
-    pdf_ellipse(canvas, A4_W - 540, 190, A4_W - 20, 710, stroke="#efe4d8", stroke_width=2)
-
-    title_y = 320
-    for line in pdf_wrap_text(TITLE, fonts["display"], 128, A4_W - 2 * 160):
-        pdf_draw_text(canvas, 160, title_y, line, fonts["display"], 128, "#2f251d")
-        title_y += line_height(128, 1.02)
-
-    pdf_draw_text(canvas, 160, title_y + 12, SUBTITLE, fonts["sans"], 52, "#6c5543")
-    pdf_draw_text(canvas, 160, title_y + 80, "Et hæfte med familiens retter og bagværk", fonts["sans"], 36, "#8b725f")
-    pdf_round_rect(canvas, 160, title_y + 150, 560, 60, 18, "#ead9c7")
-    pdf_round_rect(canvas, 760, title_y + 150, 560, 60, 18, "#ead9c7")
-    pdf_draw_text(canvas, 184, title_y + 163, f"Version {version}", fonts["sans-bold"], 30, "#5e4939")
-    pdf_draw_text(canvas, 784, title_y + 163, build_date_text, fonts["sans-bold"], 30, "#5e4939")
-
-    art_y = 980
-    pdf_round_rect(canvas, 180, art_y, A4_W - 360, 1550, 48, "#efe1d0", "#dac4ae", 3)
-    pdf_round_rect(canvas, 260, art_y + 200, A4_W - 520, 220, 110, "#f9f4ed", "#d8cdc1", 4)
-    for x, y, r in [(700, art_y + 320, 95), (880, art_y + 360, 82), (1050, art_y + 320, 92), (980, art_y + 470, 76)]:
-        pdf_ellipse(canvas, x - r, y - r, x + r, y + r, fill="#c84d3a", stroke="#9c3326", stroke_width=3)
-    pdf_round_rect(canvas, 1260, art_y + 230, 360, 180, 88, "#bf8754", "#8d6039", 4)
-    pdf_line(canvas, 430, art_y + 650, 760, art_y + 1100, "#a9774f", 24)
-    pdf_ellipse(canvas, 330, art_y + 560, 500, art_y + 760, fill="#b78359", stroke="#8d6039", stroke_width=4)
+    del fonts
+    cover = draw_cover(version, build_date_text)
+    cover_buffer = io.BytesIO()
+    cover.save(cover_buffer, format="JPEG", quality=88, optimize=True, progressive=True)
+    cover_buffer.seek(0)
+    canvas.drawImage(ImageReader(cover_buffer), 0, 0, width=PDF_W, height=PDF_H, preserveAspectRatio=False, mask="auto")
 
 
 def draw_contents_pdf(canvas, ordered: List[Recipe], page_map: Dict[str, int], fonts: Dict[str, str]) -> None:
